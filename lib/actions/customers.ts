@@ -43,6 +43,9 @@ export async function getCustomerBalance(customerId: string) {
   } catch {
     return { due: 0, paid: 0, balance: 0 };
   }
+  const customer = await db.collection<Customer>("customers").findOne({ _id: oid });
+  const openingBalance = customer?.openingBalance ?? 0;
+
   const invoices = await db
     .collection("invoices")
     .aggregate<{ total: number }>([
@@ -57,7 +60,7 @@ export async function getCustomerBalance(customerId: string) {
       { $group: { _id: null, total: { $sum: "$amount" } } },
     ])
     .toArray();
-  const due = invoices[0]?.total ?? 0;
+  const due = (invoices[0]?.total ?? 0) + openingBalance;
   const paid = payments[0]?.total ?? 0;
   return { due, paid, balance: due - paid };
 }
@@ -121,42 +124,85 @@ function parseRouteWeekday(v: string): RouteWeekday {
   return n as 0 | 1 | 2 | 3 | 4 | 5 | 6;
 }
 
-export async function createCustomerFromForm(formData: FormData) {
+export async function createCustomerFromForm(state: any, formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  const shopName = String(formData.get("shopName") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+
+  if (!name || !shopName || !phone) {
+    return { error: "Name, shop name, and phone are required." };
+  }
+
+  const db = await getDb();
+  const existing = await db.collection<Customer>("customers").findOne({ phone });
+  if (existing) {
+    return { error: "A customer with this phone number already exists." };
+  }
+
   const routeOrderRaw = formData.get("routeOrder");
   const routeOrder =
     routeOrderRaw !== null && routeOrderRaw !== ""
       ? parseInt(String(routeOrderRaw), 10)
       : undefined;
   const result = await createCustomer({
-    name: String(formData.get("name") ?? "").trim(),
-    shopName: String(formData.get("shopName") ?? "").trim(),
-    phone: String(formData.get("phone") ?? "").trim(),
+    name,
+    shopName,
+    phone,
     address: String(formData.get("address") ?? "").trim() || undefined,
     routeWeekday: parseRouteWeekday(String(formData.get("routeWeekday") ?? "1")),
     routeOrder: Number.isInteger(routeOrder) ? routeOrder : undefined,
+    gstNumber: String(formData.get("gstNumber") ?? "").trim() || undefined,
+    panNumber: String(formData.get("panNumber") ?? "").trim() || undefined,
+    openingBalance: parseFloat(String(formData.get("openingBalance") ?? "0")) || 0,
   });
   if (result._id) redirect(`/customers/${result._id}`);
   return result;
 }
 
-export async function updateCustomerFromForm(id: string, formData: FormData) {
+export async function updateCustomerFromForm(id: string, state: any, formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  const shopName = String(formData.get("shopName") ?? "").trim();
+  const phone = String(formData.get("phone") ?? "").trim();
+
+  if (!name || !shopName || !phone) {
+    return { error: "Name, shop name, and phone are required." };
+  }
+
+  const db = await getDb();
+  const { ObjectId } = await import("mongodb");
+  try {
+    const oid = new ObjectId(id);
+    const existing = await db.collection<Customer>("customers").findOne({
+      phone,
+      _id: { $ne: oid },
+    });
+    if (existing) {
+      return { error: "Another customer with this phone number already exists." };
+    }
+  } catch {
+    return { error: "Invalid customer ID." };
+  }
+
   const routeOrderRaw = formData.get("routeOrder");
   const routeOrder =
     routeOrderRaw !== null && routeOrderRaw !== ""
       ? parseInt(String(routeOrderRaw), 10)
       : undefined;
   await updateCustomer(id, {
-    name: String(formData.get("name") ?? "").trim(),
-    shopName: String(formData.get("shopName") ?? "").trim(),
-    phone: String(formData.get("phone") ?? "").trim(),
+    name,
+    shopName,
+    phone,
     address: String(formData.get("address") ?? "").trim() || undefined,
     routeWeekday: parseRouteWeekday(String(formData.get("routeWeekday") ?? "1")),
     routeOrder: Number.isInteger(routeOrder) ? routeOrder : undefined,
+    gstNumber: String(formData.get("gstNumber") ?? "").trim() || undefined,
+    panNumber: String(formData.get("panNumber") ?? "").trim() || undefined,
+    openingBalance: parseFloat(String(formData.get("openingBalance") ?? "0")) || 0,
   });
   redirect(`/customers/${id}`);
 }
 
 /** For use as bound action: action={updateCustomerFormAction.bind(null, id)} */
-export async function updateCustomerFormAction(id: string, formData: FormData) {
-  return updateCustomerFromForm(id, formData);
+export async function updateCustomerFormAction(id: string, state: any, formData: FormData) {
+  return updateCustomerFromForm(id, state, formData);
 }

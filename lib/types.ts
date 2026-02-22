@@ -10,6 +10,9 @@ export interface Customer {
   address?: string;
   routeWeekday: RouteWeekday;
   routeOrder?: number;
+  gstNumber?: string;
+  panNumber?: string;
+  openingBalance?: number;
   createdAt: Date;
   updatedAt: Date;
 }

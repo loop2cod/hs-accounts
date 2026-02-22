@@ -85,6 +85,14 @@ export async function GET(
       doc.text(addrLines, margin, y);
       y += addrLines.length * 5;
     }
+    if (customer.gstNumber) {
+      doc.text(`GST: ${customer.gstNumber}`, margin, y);
+      y += 5;
+    }
+    if (customer.panNumber) {
+      doc.text(`PAN: ${customer.panNumber}`, margin, y);
+      y += 5;
+    }
     y += 4;
   } else {
     doc.text("—", margin, y);

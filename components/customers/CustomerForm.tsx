@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useActionState } from "react";
+import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -7,12 +11,28 @@ import type { Customer } from "@/lib/types";
 
 interface CustomerFormProps {
   customer?: (Omit<Customer, "_id"> & { _id?: string }) | null;
-  action: (formData: FormData) => Promise<void>;
+  action: (state: any, formData: FormData) => Promise<any>;
+}
+
+function SubmitButton({ isUpdate }: { isUpdate: boolean }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending}>
+      {pending ? "Saving..." : isUpdate ? "Update" : "Create"}
+    </Button>
+  );
 }
 
 export function CustomerForm({ customer, action }: CustomerFormProps) {
+  const [state, formAction] = useActionState(action, null);
+
   return (
-    <form action={action} className="space-y-3">
+    <form action={formAction} className="space-y-3">
+      {state?.error && (
+        <div className="rounded bg-red-50 p-2 text-sm text-red-600">
+          {state.error}
+        </div>
+      )}
       <div>
         <label className="mb-1 block text-sm font-medium">Name *</label>
         <Input
@@ -73,8 +93,34 @@ export function CustomerForm({ customer, action }: CustomerFormProps) {
           placeholder="Order in route"
         />
       </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium">GST Number (Optional)</label>
+        <Input
+          name="gstNumber"
+          defaultValue={customer?.gstNumber ?? ""}
+          placeholder="GST Number"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium">PAN Number (Optional)</label>
+        <Input
+          name="panNumber"
+          defaultValue={customer?.panNumber ?? ""}
+          placeholder="PAN Number"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium">Opening Balance / Pending Due</label>
+        <Input
+          name="openingBalance"
+          type="number"
+          step="0.01"
+          defaultValue={customer?.openingBalance ?? ""}
+          placeholder="0.00"
+        />
+      </div>
       <div className="flex gap-2 pt-2">
-        <Button type="submit">{customer ? "Update" : "Create"}</Button>
+        <SubmitButton isUpdate={!!customer} />
         <Link href={customer?._id ? `/customers/${customer._id}` : "/customers"}>
           <Button type="button" variant="secondary">
             Cancel

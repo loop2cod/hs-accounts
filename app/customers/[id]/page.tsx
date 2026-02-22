@@ -49,6 +49,8 @@ export default async function CustomerDetailPage({
           <p>Shop: {customer.shopName}</p>
           <p>Phone: {customer.phone}</p>
           {customer.address && <p>Address: {customer.address}</p>}
+          {customer.gstNumber && <p>GST: {customer.gstNumber}</p>}
+          {customer.panNumber && <p>PAN: {customer.panNumber}</p>}
           <p>Route weekday: {weekdayLabel}</p>
         </CardContent>
       </Card>

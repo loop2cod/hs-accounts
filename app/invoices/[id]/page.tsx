@@ -73,6 +73,18 @@ export default async function InvoiceViewPage({
                   {customer.address}
                 </>
               )}
+              {customer.gstNumber && (
+                <>
+                  <br />
+                  GST: {customer.gstNumber}
+                </>
+              )}
+              {customer.panNumber && (
+                <>
+                  <br />
+                  PAN: {customer.panNumber}
+                </>
+              )}
             </>
           ) : (
             "—"
