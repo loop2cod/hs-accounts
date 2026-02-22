@@ -33,7 +33,7 @@ export function CardContent({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`p-5 ${className}`} {...props}>
+    <div className={` ${className}`} {...props}>
       {children}
     </div>
   );
