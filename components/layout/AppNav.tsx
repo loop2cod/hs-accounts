@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logout } from "@/lib/actions/auth";
 
 const links = [
   { href: "/", label: "Dashboard" },
@@ -13,6 +14,8 @@ const links = [
 
 export function AppNav() {
   const pathname = usePathname();
+
+  if (pathname === "/login") return null;
 
   return (
     <nav
@@ -36,6 +39,16 @@ export function AppNav() {
             </li>
           );
         })}
+        <li className="ml-auto flex items-center pr-2">
+          <form action={logout}>
+            <button
+              type="submit"
+              className="block rounded px-2 py-2 font-medium transition-colors md:px-3 text-red-600 hover:bg-neutral-100"
+            >
+              Logout
+            </button>
+          </form>
+        </li>
       </ul>
     </nav>
   );
