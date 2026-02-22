@@ -4,25 +4,44 @@ import { useCallback, useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import type { LineItem } from "@/lib/types";
+import type { LineItem, Invoice } from "@/lib/types";
 
 interface InvoiceFormProps {
-  customerId: string;
-  customers: { _id: string; name: string; shopName: string }[];
+  invoice?: Invoice | null;
+  customerId?: string;
+  customers: { _id: string; name: string; shopName: string; address?: string }[];
   action: (formData: FormData) => Promise<unknown>;
 }
 
 const defaultLineItem: LineItem = {
   description: "",
+  hsnSac: "",
+  narration: "",
   quantity: 0,
   unitPrice: 0,
   amount: 0,
+  gstRate: 5,
 };
 
-export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps) {
-  const [withGst, setWithGst] = useState(false);
-  const [lineItems, setLineItems] = useState<LineItem[]>([{ ...defaultLineItem }]);
+export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceFormProps) {
+  const defaultCustId = invoice ? invoice.customerId.toString() : (customerId || "");
+  const [withGst, setWithGst] = useState(invoice ? invoice.withGst : false);
+  const [lineItems, setLineItems] = useState<LineItem[]>(
+    invoice && invoice.lineItems.length > 0 ? invoice.lineItems : [{ ...defaultLineItem }]
+  );
   const [error, setError] = useState<string | null>(null);
+
+  // Find initial shipping address if customer is pre-selected for a new invoice
+  const getInitialAddress = () => {
+    if (invoice?.shippingAddress) return invoice.shippingAddress;
+    if (customerId) {
+      const cust = customers.find(c => c._id === customerId);
+      return cust?.address || "";
+    }
+    return "";
+  };
+
+  const [shippingAddress, setShippingAddress] = useState(getInitialAddress());
   const formRef = useRef<HTMLFormElement>(null);
   const rowRefs = useRef<(HTMLTableRowElement | null)[]>([]);
 
@@ -102,6 +121,12 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
         </p>
       )}
       <input type="hidden" name="lineItems" value={JSON.stringify(lineItems)} readOnly />
+      {invoice && (
+        <>
+          <input type="hidden" name="customerId" value={defaultCustId} />
+          <input type="hidden" name="withGst" value={withGst ? "true" : "false"} />
+        </>
+      )}
       <div className="flex items-center gap-2">
         <label className="flex items-center gap-1.5 text-sm">
           <input
@@ -109,14 +134,30 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
             name="withGst"
             checked={withGst}
             onChange={(e) => setWithGst(e.target.checked)}
-            className="rounded"
+            disabled={!!invoice}
+            className="rounded disabled:opacity-50"
           />
           With GST
         </label>
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">Customer *</label>
-        <Select name="customerId" required defaultValue={customerId || undefined}>
+        <Select
+          name="customerId"
+          required
+          disabled={!!invoice}
+          defaultValue={defaultCustId || undefined}
+          className="disabled:opacity-50"
+          onChange={(e) => {
+            const selectedId = e.target.value;
+            const cust = customers.find(c => c._id === selectedId);
+            if (cust) {
+              setShippingAddress(cust.address || "");
+            } else {
+              setShippingAddress("");
+            }
+          }}
+        >
           <option value="">Select customer</option>
           {customers.map((c) => (
             <option key={c._id} value={c._id}>
@@ -126,8 +167,24 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
         </Select>
       </div>
       <div>
+        <label className="mb-1 block text-sm font-medium">Shipping Address</label>
+        <textarea
+          name="shippingAddress"
+          value={shippingAddress}
+          onChange={(e) => setShippingAddress(e.target.value)}
+          className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
+          rows={3}
+          placeholder="Will auto-fill from customer if available"
+        />
+      </div>
+      <div>
         <label className="mb-1 block text-sm font-medium">Date *</label>
-        <Input name="date" type="date" required defaultValue={today} />
+        <Input
+          name="date"
+          type="date"
+          required
+          defaultValue={invoice ? new Date(invoice.date).toISOString().slice(0, 10) : today}
+        />
       </div>
       <div>
         <label className="mb-1 block text-sm font-medium">Line items</label>
@@ -135,10 +192,11 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
           <table className="w-full border-collapse text-sm">
             <thead>
               <tr className="border-b border-neutral-200">
-                <th className="text-left p-1">Description</th>
+                <th className="text-left p-1 w-1/4">Description</th>
+                <th className="text-left p-1 w-24">HSN/SAC</th>
+                <th className="text-left p-1">Narration</th>
                 <th className="text-right w-20 p-1">Qty</th>
                 <th className="text-right w-24 p-1">Rate</th>
-                {withGst && <th className="text-right w-16 p-1">GST%</th>}
                 <th className="text-right w-24 p-1">Amount</th>
                 <th className="w-8 p-1" />
               </tr>
@@ -154,11 +212,26 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
                 >
                   <td className="p-1">
                     <Input
-                      className="min-w-[120px]"
+                      className="min-w-30"
                       value={item.description}
                       onChange={(e) => updateLineItem(i, "description", e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(e, i, "desc")}
-                      placeholder="Particulars"
+                      placeholder="Item name"
+                    />
+                  </td>
+                  <td className="p-1">
+                    <Input
+                      className="min-w-20"
+                      value={item.hsnSac ?? ""}
+                      onChange={(e) => updateLineItem(i, "hsnSac", e.target.value)}
+                      placeholder="HSN"
+                    />
+                  </td>
+                  <td className="p-1">
+                    <Input
+                      className="min-w-30"
+                      value={item.narration ?? ""}
+                      onChange={(e) => updateLineItem(i, "narration", e.target.value)}
+                      placeholder="Narration"
                     />
                   </td>
                   <td className="p-1">
@@ -185,23 +258,10 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
                       onKeyDown={(e) => handleKeyDown(e, i, "rate")}
                     />
                   </td>
-                  {withGst && (
-                    <td className="p-1">
-                      <Input
-                        type="number"
-                        min={0}
-                        max={100}
-                        value={item.gstRate ?? ""}
-                        onChange={(e) =>
-                          updateLineItem(i, "gstRate", parseFloat(e.target.value) || 0)
-                        }
-                      />
-                    </td>
-                  )}
                   <td className="p-1 text-right tabular-nums">
                     {(
                       item.quantity * item.unitPrice +
-                      (withGst ? (item.gstRate ?? 0) * (item.quantity * item.unitPrice) / 100 : 0)
+                      (withGst ? 5 * (item.quantity * item.unitPrice) / 100 : 0)
                     ).toFixed(2)}
                   </td>
                   <td className="p-1">
@@ -223,14 +283,27 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
           Add row
         </Button>
       </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Notes</label>
-        <textarea
-          name="notes"
-          className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
-          rows={2}
-          defaultValue=""
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <label className="mb-1 block text-sm font-medium">Freight Amount</label>
+          <Input
+            name="freight"
+            type="number"
+            min={0}
+            step={0.01}
+            defaultValue={invoice?.freight ?? 0}
+            placeholder="0.00"
+          />
+        </div>
+        <div>
+          <label className="mb-1 block text-sm font-medium">Notes / Terms</label>
+          <textarea
+            name="notes"
+            className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
+            rows={2}
+            defaultValue={invoice?.notes || ""}
+          />
+        </div>
       </div>
       <div className="flex gap-2 pt-2">
         <Button type="submit">Save invoice</Button>

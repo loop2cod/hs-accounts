@@ -43,18 +43,6 @@ export async function GET(
       const logoBuffer = await logoRes.arrayBuffer();
       const logoBase64 = Buffer.from(logoBuffer).toString("base64");
       doc.addImage(logoBase64, "PNG", margin, y, 20, 20); // 20x20 size
-
-      // Move company text slightly to the right of the logo
-      doc.setFontSize(18);
-      doc.setFont("helvetica", "bold");
-      doc.setTextColor(37, 99, 235); // blue-600
-      doc.text("HS", margin + 25, y + 8);
-      doc.setTextColor(0, 0, 0); // reset
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(11);
-      doc.setTextColor(115, 115, 115); // neutral-500
-      doc.text("Hajass Traders", margin + 25, y + 14);
-      doc.setTextColor(0, 0, 0); // reset
       y += 20; // adjust y for the next sections based on image height
     } else {
       throw new Error("Logo fetch failed");
@@ -129,31 +117,24 @@ export async function GET(
   }
 
   // ----- Items table -----
-  const headers = invoice.withGst
-    ? ["#", "Description", "Qty", "Unit Price", "Amount", "GST%", "GST", "Total"]
-    : ["#", "Description", "Qty", "Unit Price", "Amount"];
+  const headers = ["#", "Commodity / Item", "HSN/SAC", "Narration", "Unit Price", "Qty", "Amount"];
+
+  let totalQty = 0;
+
   const rows = invoice.lineItems.map((item, i) => {
     const amount = item.quantity * item.unitPrice;
     const gstAmt = item.gstAmount ?? 0;
     const total = amount + gstAmt;
-    if (invoice.withGst) {
-      return [
-        String(i + 1),
-        item.description,
-        String(item.quantity),
-        "Rs." + formatNum(item.unitPrice),
-        "Rs." + formatNum(amount),
-        (item.gstRate ?? 0) + "%",
-        "Rs." + formatNum(gstAmt),
-        "Rs." + formatNum(total),
-      ];
-    }
+    totalQty += item.quantity;
+
     return [
       String(i + 1),
       item.description,
+      item.hsnSac || "",
+      item.narration || "",
+      formatNum(item.unitPrice),
       String(item.quantity),
-      "Rs." + formatNum(item.unitPrice),
-      "Rs." + formatNum(amount),
+      formatNum(total),
     ];
   });
 
@@ -161,31 +142,28 @@ export async function GET(
     head: [headers],
     body: rows,
     startY: y,
-    theme: "plain",
+    theme: "grid",
     headStyles: {
-      fillColor: [245, 245, 245],
+      fillColor: [240, 240, 240],
       textColor: [0, 0, 0],
       fontStyle: "bold",
-      fontSize: 10,
+      fontSize: 9,
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1,
     },
-    bodyStyles: { fontSize: 10 },
+    bodyStyles: {
+      fontSize: 8,
+      lineColor: [200, 200, 200],
+      lineWidth: 0.1,
+    },
     columnStyles: {
-      0: { cellWidth: 8 },
+      0: { cellWidth: 8, halign: "center" },
       1: { cellWidth: "auto" },
-      ...(invoice.withGst
-        ? {
-          2: { halign: "right", cellWidth: 14 },
-          3: { halign: "right", cellWidth: 22 },
-          4: { halign: "right", cellWidth: 22 },
-          5: { halign: "right", cellWidth: 12 },
-          6: { halign: "right", cellWidth: 18 },
-          7: { halign: "right", cellWidth: 22 },
-        }
-        : {
-          2: { halign: "right", cellWidth: 18 },
-          3: { halign: "right", cellWidth: 28 },
-          4: { halign: "right", cellWidth: 28 },
-        }),
+      2: { cellWidth: 18 },
+      3: { cellWidth: 25 },
+      4: { halign: "right", cellWidth: 20 },
+      5: { halign: "right", cellWidth: 15 },
+      6: { halign: "right", cellWidth: 25 },
     },
     margin: { left: margin, right: margin },
     tableWidth: contentWidth,
@@ -195,56 +173,91 @@ export async function GET(
     (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable
       ?.finalY ?? y + 20;
 
-  // ----- Totals box (right-aligned, like template) -----
+  // ----- Totals box & Words Box (placed side-by-side) -----
   const totalsLeft = pageWidth - margin - 70;
-  let totY = tableEndY + 10;
+  let totY = tableEndY;
 
+  // Draw Grand Total Words Box
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(margin, totY, totalsLeft - margin, 40);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.text("Grand Total in words:", margin + 2, totY + 5);
+  doc.setFont("helvetica", "bold");
+  const { numberToWords } = await import("@/lib/numberToWords");
+  const wordsStr = numberToWords(invoice.totalAmount).toLowerCase();
+  const wordLines = doc.splitTextToSize(wordsStr, totalsLeft - margin - 4);
+  doc.text(wordLines, margin + 2, totY + 10);
+
+  if (invoice.notes) {
+    doc.line(margin, totY + 20, totalsLeft, totY + 20);
+    doc.setFont("helvetica", "bold");
+    doc.text("Notes:", margin + 2, totY + 24);
+    doc.setFont("helvetica", "normal");
+    const noteLines = doc.splitTextToSize(invoice.notes, totalsLeft - margin - 4);
+    doc.text(noteLines, margin + 2, totY + 28);
+  }
+
+  // Draw Totals Box
+  doc.rect(totalsLeft, totY, 70, 40);
+  doc.setFontSize(9);
+  doc.setFont("helvetica", "bold");
+  doc.text("Amount", totalsLeft + 2, totY + 5);
   doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text("Subtotal:", totalsLeft, totY);
-  doc.text("Rs." + formatNum(invoice.subtotal), pageWidth - margin, totY, {
-    align: "right",
-  });
+  doc.text(formatNum(invoice.subtotal), pageWidth - margin - 2, totY + 5, { align: "right" });
   totY += 6;
 
-  if (invoice.withGst && invoice.totalGst != null) {
-    doc.text("GST:", totalsLeft, totY);
-    doc.text("Rs." + formatNum(invoice.totalGst), pageWidth - margin, totY, {
-      align: "right",
-    });
+  if (invoice.freight != null && invoice.freight > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.text("Freight", totalsLeft + 2, totY + 5);
+    doc.setFont("helvetica", "normal");
+    doc.text(formatNum(Math.abs(invoice.freight)), pageWidth - margin - 2, totY + 5, { align: "right" });
+    totY += 6;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Taxable Amt", totalsLeft + 2, totY + 5);
+    doc.setFont("helvetica", "normal");
+    doc.text(formatNum(invoice.subtotal + invoice.freight), pageWidth - margin - 2, totY + 5, { align: "right" });
     totY += 6;
   }
 
-  doc.setFont("helvetica", "bold");
-  doc.text("Total:", totalsLeft, totY);
-  doc.text("Rs." + formatNum(invoice.totalAmount), pageWidth - margin, totY, {
-    align: "right",
-  });
-  totY += 12;
-
-  // ----- Notes (centered) -----
-  if (invoice.notes) {
-    const noteLines = doc.splitTextToSize(invoice.notes, contentWidth);
+  if (invoice.withGst && invoice.totalGst != null) {
+    const halfGst = invoice.totalGst / 2;
+    doc.setFont("helvetica", "bold");
+    doc.text("CGST-2.5%", totalsLeft + 2, totY + 5);
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text(noteLines, pageWidth / 2, totY, { align: "center" });
-    totY += noteLines.length * 5 + 8;
+    doc.text(formatNum(halfGst), pageWidth - margin - 2, totY + 5, { align: "right" });
+    totY += 6;
+
+    doc.setFont("helvetica", "bold");
+    doc.text("SGST-2.5%", totalsLeft + 2, totY + 5);
+    doc.setFont("helvetica", "normal");
+    doc.text(formatNum(halfGst), pageWidth - margin - 2, totY + 5, { align: "right" });
+    totY += 6;
   }
 
-  // ----- Bottom: sender details left, thank you right -----
-  totY += 6;
-  doc.setDrawColor(220, 220, 220);
-  doc.line(margin, totY, pageWidth - margin, totY);
-  totY += 10;
-
+  // Reset totY to draw Grand Total at the bottom of the 40px bounding box
+  totY = tableEndY + 40;
+  doc.line(totalsLeft, totY - 8, pageWidth - margin, totY - 8);
+  doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.text("HS Accounts", margin, totY);
-  totY += 5;
-  doc.text("Textile Trader", margin, totY);
-  totY += 8;
-  doc.text("Thank you for your business.", pageWidth - margin, totY - 5, {
-    align: "right",
-  });
+  doc.text("Grand Total", totalsLeft + 2, totY - 3);
+  doc.text(formatNum(invoice.totalAmount), pageWidth - margin - 2, totY - 3, { align: "right" });
+
+  // ----- Bottom: sender details left, thank you right -----
+  totY += 10;
+  doc.rect(margin, totY, contentWidth, 20);
+
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.text("DECLARATION : Certified that all the particulars shown in the above invoice are true and correct", margin + 2, totY + 5);
+
+  doc.text("for", pageWidth - margin - 40, totY + 12);
+  doc.setFont("helvetica", "bold");
+  doc.text("HS Hajass Traders", pageWidth - margin - 2, totY + 12, { align: "right" });
+
+  doc.setFont("helvetica", "normal");
+  doc.text("Authorised Signatory", pageWidth - margin - 2, totY + 18, { align: "right" });
 
   const buffer = Buffer.from(doc.output("arraybuffer"));
   return new Response(buffer, {

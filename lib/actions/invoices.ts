@@ -100,6 +100,8 @@ export async function createInvoice(data: {
   customerId: string;
   withGst: boolean;
   date: Date;
+  shippingAddress?: string;
+  freight?: number;
   lineItems: LineItem[];
   notes?: string;
 }) {
@@ -117,8 +119,8 @@ export async function createInvoice(data: {
     const amount = item.quantity * item.unitPrice;
     let gstAmount = 0;
     let totalRow = amount;
-    if (data.withGst && item.gstRate != null) {
-      gstAmount = Math.round((amount * item.gstRate) / 100);
+    if (data.withGst) {
+      gstAmount = Math.round((amount * 5) / 100);
       totalRow = amount + gstAmount;
     }
     subtotal += amount;
@@ -127,20 +129,28 @@ export async function createInvoice(data: {
       quantity: item.quantity,
       unitPrice: item.unitPrice,
       amount,
-      ...(data.withGst && { gstRate: item.gstRate ?? 0, gstAmount, totalRow }),
+      hsnSac: item.hsnSac,
+      narration: item.narration,
+      ...(data.withGst && { gstRate: 5, gstAmount, totalRow }),
     };
   });
   const totalGst = data.withGst
     ? lineItems.reduce((s, i) => s + (i.gstAmount ?? 0), 0)
     : undefined;
-  const totalAmount = totalGst != null ? subtotal + totalGst : subtotal;
+
+  const freightAmount = data.freight ?? 0;
+  const taxableAmount = subtotal + freightAmount;
+  const totalAmount = totalGst != null ? taxableAmount + totalGst : taxableAmount;
+
   const doc: Omit<Invoice, "_id"> = {
     customerId,
     withGst: data.withGst,
     invoiceNumber,
     date: data.date,
+    shippingAddress: data.shippingAddress,
     lineItems,
     subtotal,
+    freight: data.freight,
     totalGst,
     totalAmount,
     notes: data.notes,
@@ -159,6 +169,10 @@ export async function createInvoiceFromForm(formData: FormData) {
   const dateStr = String(formData.get("date") ?? "");
   const date = dateStr ? new Date(dateStr) : new Date();
   const notes = String(formData.get("notes") ?? "").trim() || undefined;
+  const shippingAddress = String(formData.get("shippingAddress") ?? "").trim() || undefined;
+  const freightRaw = formData.get("freight");
+  const freight = freightRaw ? parseFloat(String(freightRaw)) : undefined;
+
   let lineItems: LineItem[];
   try {
     const raw = formData.get("lineItems");
@@ -175,9 +189,128 @@ export async function createInvoiceFromForm(formData: FormData) {
     customerId,
     withGst,
     date,
+    shippingAddress,
+    freight,
     lineItems: filtered,
     notes,
   });
+  if (result._id) redirect(`/invoices/${result._id}`);
+  return result;
+}
+
+export async function updateInvoice(
+  id: string,
+  data: {
+    customerId: string;
+    withGst: boolean;
+    date: Date;
+    shippingAddress?: string;
+    freight?: number;
+    lineItems: LineItem[];
+    notes?: string;
+  }
+) {
+  const db = await getDb();
+  const { ObjectId } = await import("mongodb");
+
+  let invoiceId: ObjectId;
+  let customerId: ObjectId;
+  try {
+    invoiceId = new ObjectId(id);
+    customerId = new ObjectId(data.customerId);
+  } catch {
+    return { error: "Invalid ID" };
+  }
+
+  let subtotal = 0;
+  const lineItems: LineItem[] = data.lineItems.map((item) => {
+    const amount = item.quantity * item.unitPrice;
+    let gstAmount = 0;
+    let totalRow = amount;
+    if (data.withGst) {
+      gstAmount = Math.round((amount * 5) / 100);
+      totalRow = amount + gstAmount;
+    }
+    subtotal += amount;
+    return {
+      description: item.description,
+      quantity: item.quantity,
+      unitPrice: item.unitPrice,
+      amount,
+      hsnSac: item.hsnSac,
+      narration: item.narration,
+      ...(data.withGst && { gstRate: 5, gstAmount, totalRow }),
+    };
+  });
+  const totalGst = data.withGst
+    ? lineItems.reduce((s, i) => s + (i.gstAmount ?? 0), 0)
+    : undefined;
+
+  const freightAmount = data.freight ?? 0;
+  const taxableAmount = subtotal + freightAmount;
+  const totalAmount = totalGst != null ? taxableAmount + totalGst : taxableAmount;
+
+  const updateDoc = {
+    $set: {
+      customerId,
+      withGst: data.withGst,
+      date: data.date,
+      shippingAddress: data.shippingAddress,
+      lineItems,
+      subtotal,
+      freight: data.freight,
+      totalGst,
+      totalAmount,
+      notes: data.notes,
+      updatedAt: new Date(),
+    }
+  };
+
+  await db.collection<Invoice>("invoices").updateOne({ _id: invoiceId }, updateDoc);
+
+  revalidatePath("/invoices");
+  revalidatePath(`/invoices/${id}`);
+  revalidatePath("/");
+  revalidatePath(`/customers/${data.customerId}`);
+
+  return { _id: id };
+}
+
+export async function updateInvoiceFromForm(id: string, formData: FormData) {
+  const customerId = String(formData.get("customerId") ?? "").trim();
+  const withGst = formData.get("withGst") === "on" || formData.get("withGst") === "true";
+  const dateStr = String(formData.get("date") ?? "");
+  const date = dateStr ? new Date(dateStr) : new Date();
+  const notes = String(formData.get("notes") ?? "").trim() || undefined;
+  const shippingAddress = String(formData.get("shippingAddress") ?? "").trim() || undefined;
+  const freightRaw = formData.get("freight");
+  const freight = freightRaw ? parseFloat(String(freightRaw)) : undefined;
+
+  let lineItems: LineItem[];
+  try {
+    const raw = formData.get("lineItems");
+    lineItems = raw ? JSON.parse(String(raw)) : [];
+  } catch {
+    return { error: "Invalid line items" };
+  }
+
+  if (!customerId) return { error: "Customer required" };
+
+  const filtered = lineItems.filter(
+    (i) => i.description.trim() !== "" || i.quantity > 0 || i.unitPrice > 0
+  );
+  if (filtered.length === 0) return { error: "Add at least one line item" };
+
+  const result = await updateInvoice(id, {
+    customerId,
+    withGst,
+    date,
+    shippingAddress,
+    freight,
+    lineItems: filtered,
+    notes,
+  });
+
   if (result._id) redirect(`/invoices/${result._id}`);
   return result;
 }

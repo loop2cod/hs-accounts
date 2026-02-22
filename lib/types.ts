@@ -22,6 +22,8 @@ export interface LineItem {
   quantity: number;
   unitPrice: number;
   amount: number;
+  hsnSac?: string;
+  narration?: string;
   gstRate?: number;
   gstAmount?: number;
   totalRow?: number;
@@ -33,8 +35,10 @@ export interface Invoice {
   withGst: boolean;
   invoiceNumber: string;
   date: Date;
+  shippingAddress?: string;
   lineItems: LineItem[];
   subtotal: number;
+  freight?: number;
   totalGst?: number;
   totalAmount: number;
   notes?: string;
