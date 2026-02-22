@@ -82,12 +82,12 @@ export default async function CustomerDetailPage({
               No invoices yet.
             </p>
           ) : (
-            <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
+            <ul className="divide-y divide-neutral-200">
               {invoices.map((inv) => (
                 <li key={inv._id}>
                   <Link
                     href={`/invoices/${inv._id}`}
-                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-neutral-50"
                   >
                     <span className="font-mono">{inv.invoiceNumber}</span>
                     <span>{formatDate(inv.date)}</span>
@@ -112,7 +112,7 @@ export default async function CustomerDetailPage({
               No payments yet.
             </p>
           ) : (
-            <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
+            <ul className="divide-y divide-neutral-200">
               {payments.map((p) => (
                 <li
                   key={p._id}

@@ -23,7 +23,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
   return (
     <form action={formAction} className="space-y-3">
       {state?.error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="text-sm text-red-600" role="alert">
           {state.error}
         </p>
       )}
@@ -71,7 +71,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
         <label className="mb-1 block text-sm font-medium">Notes</label>
         <textarea
           name="notes"
-          className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+          className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
           rows={2}
           defaultValue=""
         />

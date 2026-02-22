@@ -40,11 +40,10 @@ export default async function CustomersPage({
           <div className="flex flex-wrap gap-1">
             <Link
               href="/customers"
-              className={`rounded px-2 py-1 text-sm ${
-                weekdayFilter === undefined
-                  ? "bg-neutral-200 dark:bg-neutral-700"
-                  : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              }`}
+              className={`rounded px-2 py-1 text-sm ${weekdayFilter === undefined
+                  ? "bg-neutral-200"
+                  : "hover:bg-neutral-100"
+                }`}
             >
               All
             </Link>
@@ -52,11 +51,10 @@ export default async function CustomersPage({
               <Link
                 key={value}
                 href={`/customers?weekday=${value}`}
-                className={`rounded px-2 py-1 text-sm ${
-                  weekdayFilter === value
-                    ? "bg-neutral-200 dark:bg-neutral-700"
-                    : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                }`}
+                className={`rounded px-2 py-1 text-sm ${weekdayFilter === value
+                    ? "bg-neutral-200"
+                    : "hover:bg-neutral-100"
+                  }`}
               >
                 {label}
               </Link>
@@ -76,7 +74,7 @@ export default async function CustomersPage({
             {customers.map((c) => (
               <li key={c._id}>
                 <Link href={`/customers/${c._id}`}>
-                  <Card className="transition-colors hover:bg-neutral-50 dark:hover:bg-neutral-800/50">
+                  <Card className="transition-colors hover:bg-neutral-50">
                     <CardContent className="flex flex-wrap items-center justify-between gap-2 py-2">
                       <div>
                         <p className="font-medium">{c.name}</p>

@@ -39,31 +39,28 @@ export default async function InvoicesPage({
         <CardContent className="flex flex-wrap gap-1 py-2">
           <Link
             href="/invoices"
-            className={`rounded px-2 py-1 text-sm ${
-              !filter || filter === "all"
-                ? "bg-neutral-200 dark:bg-neutral-700"
-                : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            }`}
+            className={`rounded px-2 py-1 text-sm ${!filter || filter === "all"
+                ? "bg-neutral-200"
+                : "hover:bg-neutral-100"
+              }`}
           >
             All
           </Link>
           <Link
             href="/invoices?filter=gst"
-            className={`rounded px-2 py-1 text-sm ${
-              filter === "gst"
-                ? "bg-neutral-200 dark:bg-neutral-700"
-                : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            }`}
+            className={`rounded px-2 py-1 text-sm ${filter === "gst"
+                ? "bg-neutral-200"
+                : "hover:bg-neutral-100"
+              }`}
           >
             With GST
           </Link>
           <Link
             href="/invoices?filter=nogst"
-            className={`rounded px-2 py-1 text-sm ${
-              filter === "nogst"
-                ? "bg-neutral-200 dark:bg-neutral-700"
-                : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            }`}
+            className={`rounded px-2 py-1 text-sm ${filter === "nogst"
+                ? "bg-neutral-200"
+                : "hover:bg-neutral-100"
+              }`}
           >
             Without GST
           </Link>
@@ -76,12 +73,12 @@ export default async function InvoicesPage({
               No invoices match the filter.
             </p>
           ) : (
-            <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
+            <ul className="divide-y divide-neutral-200">
               {invoices.map((inv) => (
                 <li key={inv._id}>
                   <Link
                     href={`/invoices/${inv._id}`}
-                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-neutral-50 dark:hover:bg-neutral-800/50"
+                    className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-neutral-50"
                   >
                     <span className="font-mono">{inv.invoiceNumber}</span>
                     <span>{formatDate(inv.date)}</span>

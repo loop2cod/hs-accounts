@@ -12,7 +12,7 @@ export default async function DueBalanceReportPage() {
         <h1 className="text-lg font-semibold">Due & balance</h1>
         <div className="flex gap-2">
           <a href="/api/export/excel?type=due-balance" download="due-balance.xlsx">
-            <span className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800">
+            <span className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-100">
               Download Excel
             </span>
           </a>
@@ -27,7 +27,7 @@ export default async function DueBalanceReportPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50 dark:bg-neutral-800">
+                <tr className="border-b border-neutral-200 bg-neutral-50">
                   <th className="text-left p-2">Customer</th>
                   <th className="text-left p-2">Shop</th>
                   <th className="text-right p-2">Due</th>
@@ -39,17 +39,17 @@ export default async function DueBalanceReportPage() {
                 {rows.map((r) => (
                   <tr
                     key={r.customerId}
-                    className="border-b border-neutral-100 dark:border-neutral-800"
+                    className="border-b border-neutral-100"
                   >
                     <td className="p-2">
                       <Link
                         href={`/customers/${r.customerId}`}
-                        className="text-neutral-900 hover:underline dark:text-white"
+                        className="text-neutral-900 hover:underline"
                       >
                         {r.customerName}
                       </Link>
                     </td>
-                    <td className="p-2 text-neutral-600 dark:text-neutral-400">
+                    <td className="p-2 text-neutral-600">
                       {r.shopName}
                     </td>
                     <td className="text-right tabular-nums p-2">

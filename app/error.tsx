@@ -17,7 +17,7 @@ export default function Error({
   return (
     <div className="mx-auto max-w-md space-y-4 px-3 py-8">
       <h2 className="text-lg font-semibold">Something went wrong</h2>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+      <p className="text-sm text-neutral-600">
         {error.message || "An error occurred."}
       </p>
       <Button onClick={reset}>Try again</Button>

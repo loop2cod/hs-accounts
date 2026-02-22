@@ -104,19 +104,19 @@ export async function GET(
         String(i + 1),
         item.description,
         String(item.quantity),
-        "₹" + formatNum(item.unitPrice),
-        "₹" + formatNum(amount),
+        "Rs." + formatNum(item.unitPrice),
+        "Rs." + formatNum(amount),
         (item.gstRate ?? 0) + "%",
-        "₹" + formatNum(gstAmt),
-        "₹" + formatNum(total),
+        "Rs." + formatNum(gstAmt),
+        "Rs." + formatNum(total),
       ];
     }
     return [
       String(i + 1),
       item.description,
       String(item.quantity),
-      "₹" + formatNum(item.unitPrice),
-      "₹" + formatNum(amount),
+      "Rs." + formatNum(item.unitPrice),
+      "Rs." + formatNum(amount),
     ];
   });
 
@@ -137,18 +137,18 @@ export async function GET(
       1: { cellWidth: "auto" },
       ...(invoice.withGst
         ? {
-            2: { halign: "right", cellWidth: 14 },
-            3: { halign: "right", cellWidth: 22 },
-            4: { halign: "right", cellWidth: 22 },
-            5: { halign: "right", cellWidth: 12 },
-            6: { halign: "right", cellWidth: 18 },
-            7: { halign: "right", cellWidth: 22 },
-          }
+          2: { halign: "right", cellWidth: 14 },
+          3: { halign: "right", cellWidth: 22 },
+          4: { halign: "right", cellWidth: 22 },
+          5: { halign: "right", cellWidth: 12 },
+          6: { halign: "right", cellWidth: 18 },
+          7: { halign: "right", cellWidth: 22 },
+        }
         : {
-            2: { halign: "right", cellWidth: 18 },
-            3: { halign: "right", cellWidth: 28 },
-            4: { halign: "right", cellWidth: 28 },
-          }),
+          2: { halign: "right", cellWidth: 18 },
+          3: { halign: "right", cellWidth: 28 },
+          4: { halign: "right", cellWidth: 28 },
+        }),
     },
     margin: { left: margin, right: margin },
     tableWidth: contentWidth,
@@ -165,14 +165,14 @@ export async function GET(
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
   doc.text("Subtotal:", totalsLeft, totY);
-  doc.text("₹" + formatNum(invoice.subtotal), pageWidth - margin, totY, {
+  doc.text("Rs." + formatNum(invoice.subtotal), pageWidth - margin, totY, {
     align: "right",
   });
   totY += 6;
 
   if (invoice.withGst && invoice.totalGst != null) {
     doc.text("GST:", totalsLeft, totY);
-    doc.text("₹" + formatNum(invoice.totalGst), pageWidth - margin, totY, {
+    doc.text("Rs." + formatNum(invoice.totalGst), pageWidth - margin, totY, {
       align: "right",
     });
     totY += 6;
@@ -180,7 +180,7 @@ export async function GET(
 
   doc.setFont("helvetica", "bold");
   doc.text("Total:", totalsLeft, totY);
-  doc.text("₹" + formatNum(invoice.totalAmount), pageWidth - margin, totY, {
+  doc.text("Rs." + formatNum(invoice.totalAmount), pageWidth - margin, totY, {
     align: "right",
   });
   totY += 12;

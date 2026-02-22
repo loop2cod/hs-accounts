@@ -33,7 +33,7 @@ export default function DashboardPage() {
       </Card>
       <Card>
         <CardHeader className="font-medium">Summary</CardHeader>
-        <CardContent className="text-neutral-600 dark:text-neutral-400">
+        <CardContent className="text-neutral-600">
           <p className="text-sm">Total customers, outstanding dues, and recent activity will appear here once data exists.</p>
         </CardContent>
       </Card>

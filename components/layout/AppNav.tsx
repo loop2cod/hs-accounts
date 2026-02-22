@@ -16,7 +16,7 @@ export function AppNav() {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white/95 py-1 dark:border-neutral-700 dark:bg-neutral-900/95 md:bottom-auto md:top-0 md:border-b md:border-t-0"
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-neutral-200 bg-white/95 py-1 md:bottom-auto md:top-0 md:border-b md:border-t-0"
       aria-label="Main navigation"
     >
       <ul className="flex justify-around gap-1 text-xs md:justify-start md:gap-4 md:px-4 md:py-2">
@@ -26,11 +26,10 @@ export function AppNav() {
             <li key={href}>
               <Link
                 href={href}
-                className={`block rounded px-2 py-2 font-medium transition-colors md:px-3 ${
-                  isActive
-                    ? "bg-neutral-200 text-neutral-900 dark:bg-neutral-700 dark:text-white"
-                    : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-800 dark:hover:text-white"
-                }`}
+                className={`block rounded px-2 py-2 font-medium transition-colors md:px-3 ${isActive
+                    ? "bg-neutral-200 text-neutral-900"
+                    : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
+                  }`}
               >
                 {label}
               </Link>

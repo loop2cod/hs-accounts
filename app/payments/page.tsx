@@ -35,7 +35,7 @@ export default async function PaymentsPage({
               No payments yet.
             </p>
           ) : (
-            <ul className="divide-y divide-neutral-200 dark:divide-neutral-700">
+            <ul className="divide-y divide-neutral-200">
               {payments.map((p) => (
                 <li
                   key={p._id}

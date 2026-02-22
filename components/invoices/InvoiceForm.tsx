@@ -94,7 +94,7 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400" role="alert">
+        <p className="text-sm text-red-600" role="alert">
           {error}
         </p>
       )}
@@ -131,7 +131,7 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="border-b border-neutral-200 dark:border-neutral-700">
+              <tr className="border-b border-neutral-200">
                 <th className="text-left p-1">Description</th>
                 <th className="text-right w-20 p-1">Qty</th>
                 <th className="text-right w-24 p-1">Rate</th>
@@ -147,7 +147,7 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
                   ref={(el) => {
                     rowRefs.current[i] = el;
                   }}
-                  className="border-b border-neutral-100 dark:border-neutral-800"
+                  className="border-b border-neutral-100"
                 >
                   <td className="p-1">
                     <Input
@@ -224,7 +224,7 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
         <label className="mb-1 block text-sm font-medium">Notes</label>
         <textarea
           name="notes"
-          className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm dark:border-neutral-600 dark:bg-neutral-800"
+          className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
           rows={2}
           defaultValue=""
         />

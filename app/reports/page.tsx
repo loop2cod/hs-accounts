@@ -10,13 +10,13 @@ export default function ReportsPage() {
         <CardContent className="space-y-2">
           <Link
             href="/reports/due-balance"
-            className="block rounded p-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            className="block rounded p-2 text-sm hover:bg-neutral-100"
           >
             Due & balance
           </Link>
           <Link
             href="/reports/ledger"
-            className="block rounded p-2 text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800"
+            className="block rounded p-2 text-sm hover:bg-neutral-100"
           >
             Ledger (transaction history)
           </Link>

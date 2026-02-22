@@ -12,13 +12,6 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
@@ -37,37 +30,45 @@ body {
   color: #333;
   line-height: 1.5;
 }
+
 .inv-header {
   display: flex;
   justify-content: space-between;
   margin-bottom: 1.5rem;
 }
+
 .inv-header-left {
   width: 60%;
 }
+
 .inv-company-name {
   font-weight: 600;
   font-size: 1rem;
   margin-bottom: 4px;
 }
+
 .inv-meta {
   text-align: right;
 }
+
 .inv-title {
   font-size: 24px;
   font-weight: 600;
   margin-bottom: 10px;
 }
+
 .inv-recipient {
   margin-bottom: 1.5rem;
   padding: 8px 0;
 }
+
 .inv-table {
   width: 100%;
   border-collapse: collapse;
   border-bottom: 1px solid #ddd;
   margin-bottom: 1rem;
 }
+
 .inv-table th,
 .inv-table td {
   border-top: 1px solid #ddd;
@@ -75,30 +76,37 @@ body {
   text-align: left;
   vertical-align: top;
 }
+
 .inv-table th {
   background: #f5f5f5;
   font-weight: 600;
 }
+
 .inv-table .num {
   text-align: right;
 }
+
 .inv-totals {
   width: 100%;
   max-width: 280px;
   margin-left: auto;
   margin-bottom: 1.5rem;
 }
+
 .inv-totals td {
   padding: 4px 0;
 }
+
 .inv-totals-r {
   text-align: right;
 }
+
 .inv-notes {
   margin-bottom: 1.5rem;
   text-align: center;
   color: #555;
 }
+
 .inv-bottom {
   display: flex;
   justify-content: space-between;
@@ -108,9 +116,11 @@ body {
   font-size: 12px;
   color: #555;
 }
+
 .inv-bottom-left {
   width: 48%;
 }
+
 .inv-bottom-right {
   width: 48%;
   text-align: right;

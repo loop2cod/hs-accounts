@@ -25,7 +25,7 @@ export default async function LedgerReportPage({
             href={`/api/export/excel?type=ledger${customerId ? `&customerId=${customerId}` : ""}`}
             download="ledger.xlsx"
           >
-            <span className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-100 dark:border-neutral-600 dark:hover:bg-neutral-800">
+            <span className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-100">
               Download Excel
             </span>
           </a>
@@ -40,9 +40,8 @@ export default async function LedgerReportPage({
           <div className="flex flex-wrap gap-1">
             <Link
               href="/reports/ledger"
-              className={`rounded px-2 py-1 text-sm ${
-                !customerId ? "bg-neutral-200 dark:bg-neutral-700" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-              }`}
+              className={`rounded px-2 py-1 text-sm ${!customerId ? "bg-neutral-200" : "hover:bg-neutral-100"
+                }`}
             >
               All
             </Link>
@@ -50,9 +49,8 @@ export default async function LedgerReportPage({
               <Link
                 key={c._id}
                 href={`/reports/ledger?customerId=${c._id}`}
-                className={`rounded px-2 py-1 text-sm ${
-                  customerId === c._id ? "bg-neutral-200 dark:bg-neutral-700" : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                }`}
+                className={`rounded px-2 py-1 text-sm ${customerId === c._id ? "bg-neutral-200" : "hover:bg-neutral-100"
+                  }`}
               >
                 {c.name}
               </Link>
@@ -66,7 +64,7 @@ export default async function LedgerReportPage({
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50 dark:bg-neutral-800">
+                <tr className="border-b border-neutral-200 bg-neutral-50">
                   <th className="text-left p-2">Date</th>
                   <th className="text-left p-2">Type</th>
                   <th className="text-left p-2">Reference</th>
@@ -78,15 +76,14 @@ export default async function LedgerReportPage({
                 {entries.map((e, i) => (
                   <tr
                     key={i}
-                    className="border-b border-neutral-100 dark:border-neutral-800"
+                    className="border-b border-neutral-100"
                   >
                     <td className="p-2">{formatDate(e.date)}</td>
                     <td className="p-2 capitalize">{e.type}</td>
                     <td className="p-2">{e.reference}</td>
                     <td
-                      className={`text-right tabular-nums p-2 ${
-                        e.amount >= 0 ? "text-green-700 dark:text-green-400" : "text-red-700 dark:text-red-400"
-                      }`}
+                      className={`text-right tabular-nums p-2 ${e.amount >= 0 ? "text-green-700" : "text-red-700"
+                        }`}
                     >
                       {e.amount >= 0 ? "+" : ""}
                       {formatCurrency(e.amount)}

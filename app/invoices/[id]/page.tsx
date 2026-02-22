@@ -19,7 +19,7 @@ export default async function InvoiceViewPage({
   return (
     <>
       {/* Toolbar - hidden in print */}
-      <div className="print:hidden mx-auto max-w-3xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200 dark:border-neutral-700">
+      <div className="print:hidden mx-auto max-w-3xl px-3 py-2 flex flex-wrap items-center justify-between gap-2 border-b border-neutral-200">
         <Link href="/invoices">
           <Button size="sm" variant="ghost">
             Back
@@ -39,7 +39,7 @@ export default async function InvoiceViewPage({
         <div className="inv-header">
           <div className="inv-header-left">
             <div className="inv-company-name">HS Accounts</div>
-            <div className="text-neutral-600 dark:text-neutral-400">
+            <div className="text-neutral-600">
               Textile Trader
             </div>
           </div>
