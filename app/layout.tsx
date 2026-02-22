@@ -1,16 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Outfit } from "next/font/google";
 import { AppNav } from "@/components/layout/AppNav";
 import { RegisterSW } from "@/components/layout/RegisterSW";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const outfit = Outfit({
+  variable: "--font-outfit",
   subsets: ["latin"],
 });
 
@@ -48,7 +43,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/fav.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
+        className={`${outfit.variable} font-sans antialiased min-h-screen`}
       >
         <AppNav />
         <RegisterSW />

@@ -2,7 +2,18 @@ import Link from "next/link";
 import { getLedgerReport } from "@/lib/actions/reports";
 import { getCustomers } from "@/lib/actions/customers";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import {
+  History,
+  Download,
+  ChevronLeft,
+  Filter,
+  ArrowUpRight,
+  Receipt,
+  CreditCard,
+  FileSpreadsheet
+} from "lucide-react";
 
 export default async function LedgerReportPage({
   searchParams,
@@ -17,78 +28,111 @@ export default async function LedgerReportPage({
   ]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-4 px-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">Ledger</h1>
-        <div className="flex gap-2">
-          <a
-            href={`/api/export/excel?type=ledger${customerId ? `&customerId=${customerId}` : ""}`}
-            download="ledger.xlsx"
-          >
-            <span className="inline-flex items-center justify-center rounded-lg border border-neutral-300 px-3 py-2 text-sm font-medium hover:bg-neutral-100">
-              Download Excel
-            </span>
-          </a>
+    <div className="mx-auto max-w-5xl space-y-8 px-4 py-8">
+      {/* Header */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
           <Link href="/reports">
-            <span className="text-sm text-neutral-500 hover:underline">Back to reports</span>
+            <Button variant="secondary" size="sm" className="h-10 w-10 rounded-xl p-0">
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
           </Link>
+          <div className="flex items-center gap-3">
+            <div className="rounded-2xl bg-blue-100 p-3 text-primary">
+              <History className="h-6 w-6" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Detailed Ledger</h1>
+              <p className="text-sm text-muted-foreground">Comprehensive transaction history and tracking.</p>
+            </div>
+          </div>
         </div>
+        <a
+          href={`/api/export/excel?type=ledger${customerId ? `&customerId=${customerId}` : ""}`}
+          download="ledger.xlsx"
+        >
+          <Button className="gap-2">
+            <Download className="h-4 w-4" />
+            Export Ledger
+          </Button>
+        </a>
       </div>
-      <Card>
-        <CardHeader className="font-medium">Filter by customer</CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-1">
-            <Link
-              href="/reports/ledger"
-              className={`rounded px-2 py-1 text-sm ${!customerId ? "bg-neutral-200" : "hover:bg-neutral-100"
-                }`}
-            >
-              All
-            </Link>
-            {customers.map((c) => (
-              <Link
-                key={c._id}
-                href={`/reports/ledger?customerId=${c._id}`}
-                className={`rounded px-2 py-1 text-sm ${customerId === c._id ? "bg-neutral-200" : "hover:bg-neutral-100"
-                  }`}
-              >
-                {c.name}
+
+      {/* Filter Section */}
+      <Card className="bg-secondary/20 border-none shadow-none">
+        <CardContent className="p-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground mr-2">
+              <Filter className="h-3 w-3" /> Filter By Customer
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Link href="/reports/ledger">
+                <Button
+                  variant={!customerId ? "primary" : "secondary"}
+                  size="sm"
+                  className="rounded-xl px-4"
+                >
+                  All
+                </Button>
               </Link>
-            ))}
+              {customers.map((c) => (
+                <Link key={c._id} href={`/reports/ledger?customerId=${c._id}`}>
+                  <Button
+                    variant={customerId === c._id ? "primary" : "secondary"}
+                    size="sm"
+                    className="rounded-xl px-4"
+                  >
+                    {c.name}
+                  </Button>
+                </Link>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
-      <Card>
-        <CardHeader className="font-medium">Transaction history</CardHeader>
+
+      {/* Ledger Table */}
+      <Card className="overflow-hidden border-none shadow-xl">
+        <CardHeader className="bg-secondary/20 border-b font-bold flex flex-row items-center gap-2">
+          <FileSpreadsheet className="h-4 w-4 text-primary" />
+          Transaction History
+        </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50">
-                  <th className="text-left p-2">Date</th>
-                  <th className="text-left p-2">Type</th>
-                  <th className="text-left p-2">Reference</th>
-                  <th className="text-right p-2">Amount</th>
-                  <th className="text-right p-2">Balance</th>
+                <tr className="bg-secondary/10 text-muted-foreground font-black uppercase tracking-wider text-[10px]">
+                  <th className="px-6 py-4 text-left">Date</th>
+                  <th className="px-6 py-4 text-left">Type</th>
+                  <th className="px-6 py-4 text-left">Description / Reference</th>
+                  <th className="px-6 py-4 text-right">Amount</th>
+                  <th className="px-6 py-4 text-right">Balance</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-border font-medium">
                 {entries.map((e, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-neutral-100"
-                  >
-                    <td className="p-2">{formatDate(e.date)}</td>
-                    <td className="p-2 capitalize">{e.type}</td>
-                    <td className="p-2">{e.reference}</td>
-                    <td
-                      className={`text-right tabular-nums p-2 ${e.amount >= 0 ? "text-green-700" : "text-red-700"
-                        }`}
-                    >
+                  <tr key={i} className="hover:bg-secondary/10 transition-colors group">
+                    <td className="px-6 py-4 whitespace-nowrap text-muted-foreground">
+                      {formatDate(e.date)}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${e.type === 'invoice'
+                          ? "bg-blue-50 text-primary"
+                          : "bg-green-50 text-green-600"
+                        }`}>
+                        {e.type === 'invoice' ? <Receipt className="h-3 w-3" /> : <CreditCard className="h-3 w-3" />}
+                        {e.type}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-foreground font-semibold">
+                      {e.reference}
+                    </td>
+                    <td className={`px-6 py-4 text-right tabular-nums font-bold ${e.amount >= 0 ? "text-green-600" : "text-primary"
+                      }`}>
                       {e.amount >= 0 ? "+" : ""}
                       {formatCurrency(e.amount)}
                     </td>
-                    <td className="text-right tabular-nums p-2">
+                    <td className="px-6 py-4 text-right tabular-nums font-black text-foreground">
                       {formatCurrency(e.runningBalance)}
                     </td>
                   </tr>
@@ -97,9 +141,12 @@ export default async function LedgerReportPage({
             </table>
           </div>
           {entries.length === 0 && (
-            <p className="px-3 py-4 text-center text-sm text-neutral-500">
-              No transactions.
-            </p>
+            <div className="py-20 text-center">
+              <div className="mx-auto h-12 w-12 rounded-full bg-secondary flex items-center justify-center text-muted-foreground mb-4">
+                <History className="h-6 w-6" />
+              </div>
+              <p className="text-muted-foreground font-medium">No transactions found for this selection.</p>
+            </div>
           )}
         </CardContent>
       </Card>

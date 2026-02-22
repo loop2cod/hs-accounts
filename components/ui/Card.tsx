@@ -7,7 +7,7 @@ export function Card({
 }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={`rounded-lg border border-neutral-200 bg-white shadow-sm ${className}`}
+      className={`rounded-2xl border border-border bg-card text-card-foreground shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)] ${className}`}
       {...props}
     >
       {children}
@@ -21,7 +21,7 @@ export function CardHeader({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`border-b border-neutral-200 px-3 py-2 ${className}`} {...props}>
+    <div className={`px-5 py-4 border-b border-border font-semibold text-lg ${className}`} {...props}>
       {children}
     </div>
   );
@@ -33,7 +33,7 @@ export function CardContent({
   ...props
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={`p-3 text-sm ${className}`} {...props}>
+    <div className={`p-5 ${className}`} {...props}>
       {children}
     </div>
   );
