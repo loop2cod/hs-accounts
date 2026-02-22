@@ -1,7 +1,7 @@
 "use server";
 
 import { getDb } from "@/lib/db";
-import type { Customer } from "@/lib/types";
+import type { Customer, Invoice, Payment } from "@/lib/types";
 import type { ObjectId } from "mongodb";
 
 export interface DueBalanceRow {
@@ -66,28 +66,28 @@ export async function getLedgerReport(customerId?: string): Promise<LedgerEntry[
   const match = customerId ? { customerId: new ObjectId(customerId) } : {};
 
   const invoices = await db
-    .collection("invoices")
+    .collection<Invoice>("invoices")
     .find(match)
     .sort({ date: 1, createdAt: 1 })
     .toArray();
   const payments = await db
-    .collection("payments")
+    .collection<Payment>("payments")
     .find(match)
     .sort({ date: 1, createdAt: 1 })
     .toArray();
 
   type Row = { date: Date; type: "invoice" | "payment"; reference: string; amount: number };
   const rows: Row[] = [
-    ...invoices.map((inv: { date: Date; invoiceNumber: string; totalAmount: number }) => ({
+    ...invoices.map((inv) => ({
       date: inv.date,
       type: "invoice" as const,
       reference: inv.invoiceNumber,
       amount: inv.totalAmount,
     })),
-    ...payments.map((p: { date: Date; _id: ObjectId; amount: number }) => ({
+    ...payments.map((p) => ({
       date: p.date,
       type: "payment" as const,
-      reference: `Payment ${p._id.toString().slice(-6)}`,
+      reference: `Payment ${p._id!.toString().slice(-6)}`,
       amount: -p.amount,
     })),
   ];

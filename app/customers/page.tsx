@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getCustomers } from "@/lib/actions/customers";
+import type { RouteWeekday } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { ROUTE_WEEKDAYS } from "@/lib/utils";
@@ -16,7 +17,7 @@ export default async function CustomersPage({
       : undefined;
   const customers = await getCustomers(
     weekdayFilter !== undefined && !Number.isNaN(weekdayFilter)
-      ? { routeWeekday: weekdayFilter }
+      ? { routeWeekday: weekdayFilter as RouteWeekday }
       : undefined
   );
   const weekdayLabel = (n: number) => ROUTE_WEEKDAYS.find((w) => w.value === n)?.label ?? "";
@@ -41,8 +42,8 @@ export default async function CustomersPage({
             <Link
               href="/customers"
               className={`rounded px-2 py-1 text-sm ${weekdayFilter === undefined
-                  ? "bg-neutral-200"
-                  : "hover:bg-neutral-100"
+                ? "bg-neutral-200"
+                : "hover:bg-neutral-100"
                 }`}
             >
               All
@@ -52,8 +53,8 @@ export default async function CustomersPage({
                 key={value}
                 href={`/customers?weekday=${value}`}
                 className={`rounded px-2 py-1 text-sm ${weekdayFilter === value
-                    ? "bg-neutral-200"
-                    : "hover:bg-neutral-100"
+                  ? "bg-neutral-200"
+                  : "hover:bg-neutral-100"
                   }`}
               >
                 {label}

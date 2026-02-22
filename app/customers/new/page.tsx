@@ -9,7 +9,7 @@ export default function NewCustomerPage() {
       <Card>
         <CardHeader className="font-medium">Customer details</CardHeader>
         <CardContent>
-          <CustomerForm action={createCustomerFromForm} />
+          <CustomerForm action={createCustomerFromForm as any} />
         </CardContent>
       </Card>
     </div>

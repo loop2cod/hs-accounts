@@ -15,7 +15,7 @@ interface PaymentFormProps {
 
 export function PaymentForm({ customerId, customers, action }: PaymentFormProps) {
   const [state, formAction] = useActionState(
-    async (_: null, formData: FormData) => action(formData),
+    async (state: { error?: string } | null, formData: FormData) => action(formData),
     null as { error?: string } | null
   );
   const today = new Date().toISOString().slice(0, 10);

@@ -31,7 +31,7 @@ export default async function EditCustomerPage({
         <CardHeader className="font-medium">Customer details</CardHeader>
         <CardContent>
           <CustomerForm
-            customer={customer}
+            customer={customer as any}
             action={updateCustomerFormAction.bind(null, id)}
           />
         </CardContent>

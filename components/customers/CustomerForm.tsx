@@ -6,8 +6,8 @@ import { ROUTE_WEEKDAYS } from "@/lib/utils";
 import type { Customer } from "@/lib/types";
 
 interface CustomerFormProps {
-  customer?: (Customer & { _id?: string }) | null;
-  action: (formData: FormData) => Promise<unknown>;
+  customer?: (Omit<Customer, "_id"> & { _id?: string }) | null;
+  action: (formData: FormData) => Promise<void>;
 }
 
 export function CustomerForm({ customer, action }: CustomerFormProps) {

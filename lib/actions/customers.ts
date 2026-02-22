@@ -3,10 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import type { Customer } from "@/lib/types";
+import type { Customer, RouteWeekday } from "@/lib/types";
 import type { ObjectId } from "mongodb";
 
-export async function getCustomers(filters?: { routeWeekday?: number }) {
+export async function getCustomers(filters?: { routeWeekday?: RouteWeekday }) {
   const db = await getDb();
   const query = filters?.routeWeekday != null ? { routeWeekday: filters.routeWeekday } : {};
   const list = await db
@@ -115,7 +115,7 @@ export async function deleteCustomer(id: string) {
   return {};
 }
 
-function parseRouteWeekday(v: string): number {
+function parseRouteWeekday(v: string): RouteWeekday {
   const n = parseInt(v, 10);
   if (Number.isNaN(n) || n < 0 || n > 6) return 1;
   return n as 0 | 1 | 2 | 3 | 4 | 5 | 6;

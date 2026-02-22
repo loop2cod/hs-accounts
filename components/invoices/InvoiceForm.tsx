@@ -44,8 +44,11 @@ export function InvoiceForm({ customerId, customers, action }: InvoiceFormProps)
   );
 
   const addRow = useCallback(() => {
-    setLineItems((prev) => [...prev, { ...defaultLineItem }]);
-    setTimeout(() => rowRefs.current[prev.length]?.querySelector("input")?.focus(), 50);
+    setLineItems((prev) => {
+      const nextLength = prev.length;
+      setTimeout(() => rowRefs.current[nextLength]?.querySelector("input")?.focus(), 50);
+      return [...prev, { ...defaultLineItem }];
+    });
   }, []);
 
   const removeRow = useCallback((index: number) => {
