@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "HS Accounts - Textile Trader",
+  title: "HS Hajass Traders",
   description: "Accounting for textile traders: customers, invoices, payments, due & balance.",
   manifest: "/manifest.json",
   icons: {
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "HS Accounts",
+    title: "HS Hajass Traders",
   },
 };
 

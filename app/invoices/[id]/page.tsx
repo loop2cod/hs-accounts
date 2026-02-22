@@ -37,10 +37,11 @@ export default async function InvoiceViewPage({
       {/* Invoice document - matches template structure */}
       <div className="invoice-doc mx-auto max-w-3xl px-4 py-6 print:py-0 print:px-0 print:max-w-none">
         <div className="inv-header">
-          <div className="inv-header-left">
-            <div className="inv-company-name">HS Accounts</div>
-            <div className="text-neutral-600">
-              Textile Trader
+          <div className="inv-header-left flex gap-4 items-center">
+            <img src="/logo.png" alt="HS Accounts Logo" className="h-16 w-auto mix-blend-multiply" />
+            <div className="flex flex-col justify-center">
+              <span className="text-2xl font-bold leading-none text-blue-600">HS</span>
+              <span className="text-sm font-medium leading-none text-neutral-500">Hajass Traders</span>
             </div>
           </div>
           <div className="inv-meta">

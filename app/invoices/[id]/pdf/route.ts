@@ -36,14 +36,43 @@ export async function GET(
   let y = margin;
 
   // ----- Header: company left, invoice meta right -----
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.text("HS Accounts", margin, y);
-  y += 6;
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(11);
-  doc.text("Textile Trader", margin, y);
-  y += 10;
+  const logoUrl = `${_request.nextUrl.origin}/logo.png`;
+  try {
+    const logoRes = await fetch(logoUrl);
+    if (logoRes.ok) {
+      const logoBuffer = await logoRes.arrayBuffer();
+      const logoBase64 = Buffer.from(logoBuffer).toString("base64");
+      doc.addImage(logoBase64, "PNG", margin, y, 20, 20); // 20x20 size
+
+      // Move company text slightly to the right of the logo
+      doc.setFontSize(18);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(37, 99, 235); // blue-600
+      doc.text("HS", margin + 25, y + 8);
+      doc.setTextColor(0, 0, 0); // reset
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(11);
+      doc.setTextColor(115, 115, 115); // neutral-500
+      doc.text("Hajass Traders", margin + 25, y + 14);
+      doc.setTextColor(0, 0, 0); // reset
+      y += 20; // adjust y for the next sections based on image height
+    } else {
+      throw new Error("Logo fetch failed");
+    }
+  } catch {
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(37, 99, 235);
+    doc.text("HS", margin, y);
+    doc.setTextColor(0, 0, 0);
+    y += 6;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(11);
+    doc.setTextColor(115, 115, 115);
+    doc.text("Hajass Traders", margin, y);
+    doc.setTextColor(0, 0, 0);
+    y += 10;
+  }
 
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
