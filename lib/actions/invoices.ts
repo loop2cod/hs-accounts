@@ -54,6 +54,8 @@ export async function getInvoicesByCustomer(customerId: string) {
 export async function getInvoices(filters?: {
   withGst?: boolean;
   customerId?: string;
+  page?: number;
+  limit?: number;
 }) {
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
@@ -66,16 +68,33 @@ export async function getInvoices(filters?: {
       // ignore invalid id
     }
   }
-  const list = await db
-    .collection<Invoice>("invoices")
-    .find(query)
-    .sort({ date: -1, createdAt: -1 })
-    .toArray();
-  return list.map((inv) => ({
-    ...inv,
-    _id: inv._id!.toString(),
-    customerId: inv.customerId.toString(),
-  }));
+
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? 10;
+  const skip = (page - 1) * limit;
+
+  const col = db.collection<Invoice>("invoices");
+  const total = await col.countDocuments(query);
+
+  const cursor = col.find(query).sort({ date: -1, createdAt: -1 });
+
+  if (filters?.limit !== 0) {
+    cursor.skip(skip).limit(limit);
+  }
+
+  const list = await cursor.toArray();
+
+  return {
+    invoices: list.map((inv) => ({
+      ...inv,
+      _id: inv._id!.toString(),
+      customerId: inv.customerId.toString(),
+    })),
+    total,
+    page,
+    limit: filters?.limit === 0 ? total : limit,
+    totalPages: filters?.limit === 0 ? 1 : Math.ceil(total / limit),
+  };
 }
 
 export async function getInvoiceById(id: string) {

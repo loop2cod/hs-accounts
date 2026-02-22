@@ -27,7 +27,11 @@ export async function getPaymentsByCustomer(customerId: string) {
   }));
 }
 
-export async function getPayments(filters?: { customerId?: string }) {
+export async function getPayments(filters?: {
+  customerId?: string;
+  page?: number;
+  limit?: number;
+}) {
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
   const query: Record<string, unknown> = {};
@@ -38,16 +42,33 @@ export async function getPayments(filters?: { customerId?: string }) {
       // ignore
     }
   }
-  const list = await db
-    .collection<Payment>("payments")
-    .find(query)
-    .sort({ date: -1, createdAt: -1 })
-    .toArray();
-  return list.map((p) => ({
-    ...p,
-    _id: p._id!.toString(),
-    customerId: p.customerId.toString(),
-  }));
+
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? 10;
+  const skip = (page - 1) * limit;
+
+  const col = db.collection<Payment>("payments");
+  const total = await col.countDocuments(query);
+
+  const cursor = col.find(query).sort({ date: -1, createdAt: -1 });
+
+  if (filters?.limit !== 0) {
+    cursor.skip(skip).limit(limit);
+  }
+
+  const list = await cursor.toArray();
+
+  return {
+    payments: list.map((p) => ({
+      ...p,
+      _id: p._id!.toString(),
+      customerId: p.customerId.toString(),
+    })),
+    total,
+    page,
+    limit: filters?.limit === 0 ? total : limit,
+    totalPages: filters?.limit === 0 ? 1 : Math.ceil(total / limit),
+  };
 }
 
 export async function createPayment(data: {

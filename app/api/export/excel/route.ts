@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
       const filter = request.nextUrl.searchParams.get("filter");
       const withGst =
         filter === "gst" ? true : filter === "nogst" ? false : undefined;
-      const list = await getInvoices({ withGst });
+      const { invoices: list } = await getInvoices({ withGst, limit: 0 });
       data = [
         ["Invoice #", "Date", "Total", "With GST"],
         ...list.map((inv) => [
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
       break;
     }
     case "payments": {
-      const list = await getPayments();
+      const { payments: list } = await getPayments({ limit: 0 });
       data = [
         ["Date", "Amount", "Mode", "Reference", "Notes"],
         ...list.map((p) => [
