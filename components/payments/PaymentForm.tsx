@@ -21,63 +21,98 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <form action={formAction} className="space-y-3">
+    <form action={formAction} className="space-y-5">
       {state?.error && (
-        <p className="text-sm text-red-600" role="alert">
+        <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs font-medium animate-in fade-in slide-in-from-top-1" role="alert">
           {state.error}
-        </p>
+        </div>
       )}
-      <div>
-        <label className="mb-1 block text-sm font-medium">Customer *</label>
-        <Select name="customerId" required defaultValue={customerId || undefined}>
-          <option value="">Select customer</option>
-          {customers.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name} – {c.shopName}
-            </option>
-          ))}
-        </Select>
+
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Customer *</label>
+          <Select
+            name="customerId"
+            required
+            defaultValue={customerId || undefined}
+            className="bg-slate-50/50 border-slate-200/50 focus:bg-white"
+          >
+            <option value="">Select customer</option>
+            {customers.map((c) => (
+              <option key={c._id} value={c._id}>
+                {c.name} – {c.shopName}
+              </option>
+            ))}
+          </Select>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Amount (₹) *</label>
+            <Input
+              name="amount"
+              type="number"
+              step="0.01"
+              min="0.01"
+              required
+              placeholder="0.00"
+              className="bg-slate-50/50 border-slate-200/50 focus:bg-white h-10"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Date *</label>
+            <Input
+              name="date"
+              type="date"
+              required
+              defaultValue={today}
+              className="bg-slate-50/50 border-slate-200/50 focus:bg-white h-10"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Payment mode *</label>
+            <Select
+              name="paymentMode"
+              required
+              defaultValue="Cash"
+              className="bg-slate-50/50 border-slate-200/50 focus:bg-white h-10"
+            >
+              {PAYMENT_MODES.map((m) => (
+                <option key={m} value={m}>
+                  {m}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Reference</label>
+            <Input
+              name="reference"
+              placeholder="Optional"
+              className="bg-slate-50/50 border-slate-200/50 focus:bg-white h-10"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Notes</label>
+          <textarea
+            name="notes"
+            className="w-full rounded-xl border border-slate-200/60 bg-slate-50/50 px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all min-h-20 placeholder:text-slate-400 focus:bg-white"
+            rows={2}
+            defaultValue=""
+            placeholder="Add any additional details..."
+          />
+        </div>
       </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Amount (₹) *</label>
-        <Input
-          name="amount"
-          type="number"
-          step="0.01"
-          min="0.01"
-          required
-          placeholder="0.00"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Date *</label>
-        <Input name="date" type="date" required defaultValue={today} />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Payment mode *</label>
-        <Select name="paymentMode" required defaultValue="Cash">
-          {PAYMENT_MODES.map((m) => (
-            <option key={m} value={m}>
-              {m}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Reference</label>
-        <Input name="reference" placeholder="Optional" />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Notes</label>
-        <textarea
-          name="notes"
-          className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
-          rows={2}
-          defaultValue=""
-        />
-      </div>
-      <div className="flex gap-2 pt-2">
-        <Button type="submit">Record payment</Button>
+
+      <div className="pt-2">
+        <Button type="submit" className="w-full h-11 shadow-lg shadow-primary/20 font-bold tracking-wide">
+          Record Payment
+        </Button>
       </div>
     </form>
   );

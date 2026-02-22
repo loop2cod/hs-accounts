@@ -114,202 +114,215 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
   const today = new Date().toISOString().slice(0, 10);
 
   return (
-    <form ref={formRef} onSubmit={handleSubmit} className="space-y-3">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 bg-white p-4 md:p-6 rounded-2xl border border-slate-200/60 shadow-sm">
       {error && (
-        <p className="text-sm text-red-600" role="alert">
+        <div className="p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-1" role="alert">
           {error}
-        </p>
+        </div>
       )}
-      <input type="hidden" name="lineItems" value={JSON.stringify(lineItems)} readOnly />
-      {invoice && (
-        <>
-          <input type="hidden" name="customerId" value={defaultCustId} />
-          <input type="hidden" name="withGst" value={withGst ? "true" : "false"} />
-        </>
-      )}
-      <div className="flex items-center gap-2">
-        <label className="flex items-center gap-1.5 text-sm">
-          <input
-            type="checkbox"
-            name="withGst"
-            checked={withGst}
-            onChange={(e) => setWithGst(e.target.checked)}
-            disabled={!!invoice}
-            className="rounded disabled:opacity-50"
-          />
-          With GST
-        </label>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="space-y-5">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Customer</label>
+            <label className="flex items-center gap-2 text-xs font-semibold text-primary/80 cursor-pointer hover:text-primary transition-colors">
+              <input
+                type="checkbox"
+                name="withGst"
+                checked={withGst}
+                onChange={(e) => setWithGst(e.target.checked)}
+                disabled={!!invoice}
+                className="w-4 h-4 rounded border-slate-300 text-primary focus:ring-primary/20 accent-primary"
+              />
+              Include GST (5%)
+            </label>
+          </div>
+
+          <div className="space-y-4">
+            <Select
+              name="customerId"
+              required
+              disabled={!!invoice}
+              defaultValue={defaultCustId || undefined}
+              className="bg-slate-50/50 border-slate-200/50 focus:bg-white"
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                const cust = customers.find(c => c._id === selectedId);
+                setShippingAddress(cust?.address || "");
+              }}
+            >
+              <option value="">Select a customer</option>
+              {customers.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name} – {c.shopName}
+                </option>
+              ))}
+            </Select>
+
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Shipping Address</label>
+              <textarea
+                name="shippingAddress"
+                value={shippingAddress}
+                onChange={(e) => setShippingAddress(e.target.value)}
+                className="w-full rounded-xl border border-slate-200/60 bg-slate-50/50 px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all min-h-20 placeholder:text-slate-400 focus:bg-white"
+                placeholder="Full delivery address..."
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-5">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Invoice Date</label>
+            <Input
+              name="date"
+              type="date"
+              required
+              className="bg-slate-50/50 border-slate-200/50 focus:bg-white"
+              defaultValue={invoice ? new Date(invoice.date).toISOString().slice(0, 10) : today}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Notes & Terms</label>
+            <textarea
+              name="notes"
+              className="w-full rounded-xl border border-slate-200/60 bg-slate-50/50 px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all min-h-20 placeholder:text-slate-400 focus:bg-white"
+              defaultValue={invoice?.notes || ""}
+              placeholder="Special instructions or terms..."
+            />
+          </div>
+        </div>
       </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Customer *</label>
-        <Select
-          name="customerId"
-          required
-          disabled={!!invoice}
-          defaultValue={defaultCustId || undefined}
-          className="disabled:opacity-50"
-          onChange={(e) => {
-            const selectedId = e.target.value;
-            const cust = customers.find(c => c._id === selectedId);
-            if (cust) {
-              setShippingAddress(cust.address || "");
-            } else {
-              setShippingAddress("");
-            }
-          }}
-        >
-          <option value="">Select customer</option>
-          {customers.map((c) => (
-            <option key={c._id} value={c._id}>
-              {c.name} – {c.shopName}
-            </option>
-          ))}
-        </Select>
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Shipping Address</label>
-        <textarea
-          name="shippingAddress"
-          value={shippingAddress}
-          onChange={(e) => setShippingAddress(e.target.value)}
-          className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
-          rows={3}
-          placeholder="Will auto-fill from customer if available"
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Date *</label>
-        <Input
-          name="date"
-          type="date"
-          required
-          defaultValue={invoice ? new Date(invoice.date).toISOString().slice(0, 10) : today}
-        />
-      </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Line items</label>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-neutral-200">
-                <th className="text-left p-1 w-1/4">Description</th>
-                <th className="text-left p-1 w-24">HSN/SAC</th>
-                <th className="text-left p-1">Narration</th>
-                <th className="text-right w-20 p-1">Qty</th>
-                <th className="text-right w-24 p-1">Rate</th>
-                <th className="text-right w-24 p-1">Amount</th>
-                <th className="w-8 p-1" />
-              </tr>
-            </thead>
-            <tbody>
-              {lineItems.map((item, i) => (
-                <tr
-                  key={i}
-                  ref={(el) => {
-                    rowRefs.current[i] = el;
-                  }}
-                  className="border-b border-neutral-100"
-                >
-                  <td className="p-1">
+
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between px-1">
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Line Items</label>
+          <Button type="button" variant="outline" size="sm" onClick={addRow} className="h-7 rounded-lg text-[10px] font-bold uppercase tracking-wider px-3">
+            Add Row
+          </Button>
+        </div>
+
+        <div className="space-y-4 md:space-y-0 md:border md:border-slate-100 md:rounded-xl md:overflow-hidden">
+          {/* Desktop header */}
+          <div className="hidden md:grid md:grid-cols-12 bg-slate-50/80 border-b border-slate-100 px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="col-span-4">Description</div>
+            <div className="col-span-2">HSN</div>
+            <div className="col-span-2 text-right">Qty</div>
+            <div className="col-span-2 text-right">Rate</div>
+            <div className="col-span-2 text-right">Total</div>
+          </div>
+
+          <div className="divide-y divide-slate-100">
+            {lineItems.map((item, i) => (
+              <div
+                key={i}
+                ref={(el) => {
+                  rowRefs.current[i] = el as any; // Cast as any for simplicity in this transition
+                }}
+                className="relative group bg-white border border-slate-200/60 rounded-xl p-4 md:p-0 md:border-0 md:rounded-none md:grid md:grid-cols-12 md:items-center md:hover:bg-slate-50/30 transition-all"
+              >
+                {/* Mobile View Stacking */}
+                <div className="space-y-3 md:space-y-0 md:contents">
+                  <div className="md:col-span-4">
+                    <label className="md:hidden text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Description</label>
                     <Input
-                      className="min-w-30"
+                      className="border-slate-200/60 md:border-transparent bg-slate-50/30 md:bg-transparent focus:bg-white md:focus:border-slate-200 h-9 px-3 md:px-2 text-sm"
                       value={item.description}
                       onChange={(e) => updateLineItem(i, "description", e.target.value)}
-                      placeholder="Item name"
+                      placeholder="Item name..."
                     />
-                  </td>
-                  <td className="p-1">
+                  </div>
+
+                  <div className="md:col-span-2">
+                    <label className="md:hidden text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">HSN Code</label>
                     <Input
-                      className="min-w-20"
+                      className="border-slate-200/60 md:border-transparent bg-slate-50/30 md:bg-transparent focus:bg-white md:focus:border-slate-200 h-9 px-3 md:px-2 uppercase text-sm"
                       value={item.hsnSac ?? ""}
                       onChange={(e) => updateLineItem(i, "hsnSac", e.target.value)}
                       placeholder="HSN"
                     />
-                  </td>
-                  <td className="p-1">
-                    <Input
-                      className="min-w-30"
-                      value={item.narration ?? ""}
-                      onChange={(e) => updateLineItem(i, "narration", e.target.value)}
-                      placeholder="Narration"
-                    />
-                  </td>
-                  <td className="p-1">
-                    <Input
-                      type="number"
-                      min={0}
-                      step={1}
-                      value={item.quantity || ""}
-                      onChange={(e) =>
-                        updateLineItem(i, "quantity", parseFloat(e.target.value) || 0)
-                      }
-                      onKeyDown={(e) => handleKeyDown(e, i, "qty")}
-                    />
-                  </td>
-                  <td className="p-1">
-                    <Input
-                      type="number"
-                      min={0}
-                      step={0.01}
-                      value={item.unitPrice || ""}
-                      onChange={(e) =>
-                        updateLineItem(i, "unitPrice", parseFloat(e.target.value) || 0)
-                      }
-                      onKeyDown={(e) => handleKeyDown(e, i, "rate")}
-                    />
-                  </td>
-                  <td className="p-1 text-right tabular-nums">
-                    {(
-                      item.quantity * item.unitPrice +
-                      (withGst ? 5 * (item.quantity * item.unitPrice) / 100 : 0)
-                    ).toFixed(2)}
-                  </td>
-                  <td className="p-1">
-                    <button
-                      type="button"
-                      onClick={() => removeRow(i)}
-                      className="text-neutral-500 hover:text-red-600 text-xs"
-                      aria-label="Remove row"
-                    >
-                      ×
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <Button type="button" variant="secondary" size="sm" onClick={addRow} className="mt-1">
-          Add row
-        </Button>
-      </div>
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="mb-1 block text-sm font-medium">Freight Amount</label>
-          <Input
-            name="freight"
-            type="number"
-            min={0}
-            step={0.01}
-            defaultValue={invoice?.freight ?? 0}
-            placeholder="0.00"
-          />
-        </div>
-        <div>
-          <label className="mb-1 block text-sm font-medium">Notes / Terms</label>
-          <textarea
-            name="notes"
-            className="w-full rounded border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
-            rows={2}
-            defaultValue={invoice?.notes || ""}
-          />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 md:col-span-4 md:grid-cols-2 md:gap-0">
+                    <div>
+                      <label className="md:hidden text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block text-right">Qty</label>
+                      <Input
+                        type="number"
+                        className="border-slate-200/60 md:border-transparent bg-slate-50/30 md:bg-transparent focus:bg-white md:focus:border-slate-200 h-9 px-3 md:px-2 text-right text-sm"
+                        value={item.quantity || ""}
+                        onChange={(e) =>
+                          updateLineItem(i, "quantity", parseFloat(e.target.value) || 0)
+                        }
+                        onKeyDown={(e) => handleKeyDown(e, i, "qty")}
+                      />
+                    </div>
+                    <div>
+                      <label className="md:hidden text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block text-right">Rate</label>
+                      <Input
+                        type="number"
+                        className="border-slate-200/60 md:border-transparent bg-slate-50/30 md:bg-transparent focus:bg-white md:focus:border-slate-200 h-9 px-3 md:px-2 text-right text-sm"
+                        value={item.unitPrice || ""}
+                        onChange={(e) =>
+                          updateLineItem(i, "unitPrice", parseFloat(e.target.value) || 0)
+                        }
+                        onKeyDown={(e) => handleKeyDown(e, i, "rate")}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 md:border-0 md:pt-0 md:col-span-2 md:justify-end md:px-4">
+                    <label className="md:hidden text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subtotal</label>
+                    <span className="font-bold text-slate-900 tabular-nums">
+                      {(
+                        item.quantity * item.unitPrice +
+                        (withGst ? 5 * (item.quantity * item.unitPrice) / 100 : 0)
+                      ).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Remove button */}
+                <button
+                  type="button"
+                  onClick={() => removeRow(i)}
+                  className="absolute -top-2 -right-2 md:static w-7 h-7 flex items-center justify-center rounded-full bg-red-50 text-red-500 border border-red-100 md:border-0 md:bg-transparent md:text-slate-300 md:hover:text-red-500 md:hover:bg-red-50 transition-all md:opacity-0 md:group-hover:opacity-100"
+                  title="Delete item"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
-      <div className="flex gap-2 pt-2">
-        <Button type="submit">Save invoice</Button>
-        <p className="text-xs text-neutral-500 self-center">
-          Tab: next field · Enter: next field/row · Ctrl+Enter: save
-        </p>
+
+      <div className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-6 pt-4 border-t border-slate-200/60">
+        <div className="hidden md:flex items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 px-4 py-2 rounded-lg">
+          <span className="flex items-center gap-1.5"><kbd className="bg-white border px-1 rounded shadow-sm text-slate-500">Tab</kbd> Next</span>
+          <span className="flex items-center gap-1.5"><kbd className="bg-white border px-1 rounded shadow-sm text-slate-500">Enter</kbd> Add row</span>
+        </div>
+
+        <div className="flex items-end justify-between md:justify-end gap-6 w-full md:w-auto">
+          <div className="flex flex-col items-start md:items-end">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Freight</label>
+            <div className="w-24 mt-1">
+              <Input
+                name="freight"
+                type="number"
+                className="text-right h-9 bg-slate-50/50 border-slate-200/50 focus:bg-white text-sm"
+                defaultValue={invoice?.freight ?? 0}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+          <Button type="submit" size="md" className="h-10 px-8 shadow-lg shadow-primary/20 font-bold tracking-wide">
+            {invoice ? "Update Invoice" : "Save Invoice"}
+          </Button>
+        </div>
       </div>
     </form>
   );

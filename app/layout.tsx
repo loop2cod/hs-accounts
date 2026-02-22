@@ -48,11 +48,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/fav.png" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen bg-slate-50/30`}
       >
         <AppNav />
         <RegisterSW />
-        <main className="pb-16 pt-2 md:pb-4 md:pt-14 md:pl-4 md:pr-4">
+        <main className="pb-24 pt-10 md:pb-8 md:pt-20 lg:px-8">
           {children}
         </main>
       </body>
