@@ -13,6 +13,7 @@ export interface Customer {
   gstNumber?: string;
   panNumber?: string;
   openingBalance?: number;
+  deleted?: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -42,6 +43,7 @@ export interface Invoice {
   totalGst?: number;
   totalAmount: number;
   notes?: string;
+  deleted?: boolean;
   createdAt: Date;
 }
 

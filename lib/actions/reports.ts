@@ -17,7 +17,7 @@ export interface DueBalanceRow {
 
 export async function getDueBalanceReport(weekdayFilter?: number): Promise<DueBalanceRow[]> {
   const db = await getDb();
-  const filter = weekdayFilter !== undefined ? { routeWeekday: weekdayFilter } : {};
+  const filter: any = weekdayFilter !== undefined ? { routeWeekday: weekdayFilter } : {};
   const customers = await db
     .collection<Customer>("customers")
     .find(filter)
@@ -31,7 +31,7 @@ export async function getDueBalanceReport(weekdayFilter?: number): Promise<DueBa
     const invAgg = await db
       .collection("invoices")
       .aggregate<{ total: number }>([
-        { $match: { customerId: oid } },
+        { $match: { customerId: oid, deleted: { $ne: true } } },
         { $group: { _id: null, total: { $sum: "$totalAmount" } } },
       ])
       .toArray();
@@ -69,7 +69,7 @@ export interface LedgerEntry {
 export async function getLedgerReport(customerId?: string): Promise<LedgerEntry[]> {
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
-  const match = customerId ? { customerId: new ObjectId(customerId) } : {};
+  const match = customerId ? { customerId: new ObjectId(customerId), deleted: { $ne: true } } : { deleted: { $ne: true } };
 
   const invoices = await db
     .collection<Invoice>("invoices")
@@ -78,7 +78,7 @@ export async function getLedgerReport(customerId?: string): Promise<LedgerEntry[
     .toArray();
   const payments = await db
     .collection<Payment>("payments")
-    .find(match)
+    .find(customerId ? { customerId: new ObjectId(customerId) } : {})
     .sort({ date: 1, createdAt: 1 })
     .toArray();
 

@@ -6,9 +6,11 @@ import { getDb } from "@/lib/db";
 import type { Customer, RouteWeekday } from "@/lib/types";
 import type { ObjectId } from "mongodb";
 
-export async function getCustomers(filters?: { routeWeekday?: RouteWeekday }) {
+export async function getCustomers(filters?: { routeWeekday?: RouteWeekday; includeDeleted?: boolean }) {
   const db = await getDb();
-  const query = filters?.routeWeekday != null ? { routeWeekday: filters.routeWeekday } : {};
+  const query: any = {};
+  if (filters?.routeWeekday != null) query.routeWeekday = filters.routeWeekday;
+  if (!filters?.includeDeleted) query.deleted = { $ne: true };
   const list = await db
     .collection<Customer>("customers")
     .find(query)
@@ -20,7 +22,7 @@ export async function getCustomers(filters?: { routeWeekday?: RouteWeekday }) {
   }));
 }
 
-export async function getCustomerById(id: string) {
+export async function getCustomerById(id: string, includeDeleted: boolean = false) {
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
   let oid: ObjectId;
@@ -29,7 +31,9 @@ export async function getCustomerById(id: string) {
   } catch {
     return null;
   }
-  const customer = await db.collection<Customer>("customers").findOne({ _id: oid });
+  const query: any = { _id: oid };
+  if (!includeDeleted) query.deleted = { $ne: true };
+  const customer = await db.collection<Customer>("customers").findOne(query);
   if (!customer) return null;
   return { ...customer, _id: customer._id!.toString() };
 }
@@ -49,7 +53,7 @@ export async function getCustomerBalance(customerId: string) {
   const invoices = await db
     .collection("invoices")
     .aggregate<{ total: number }>([
-      { $match: { customerId: oid } },
+      { $match: { customerId: oid, deleted: { $ne: true } } },
       { $group: { _id: null, total: { $sum: "$totalAmount" } } },
     ])
     .toArray();
@@ -112,7 +116,28 @@ export async function deleteCustomer(id: string) {
   } catch {
     return { error: "Invalid id" };
   }
-  await db.collection<Customer>("customers").deleteOne({ _id: oid });
+  await db.collection<Customer>("customers").updateOne(
+    { _id: oid },
+    { $set: { deleted: true, updatedAt: new Date() } }
+  );
+  revalidatePath("/customers");
+  revalidatePath("/");
+  return {};
+}
+
+export async function restoreCustomer(id: string) {
+  const db = await getDb();
+  const { ObjectId } = await import("mongodb");
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(id);
+  } catch {
+    return { error: "Invalid id" };
+  }
+  await db.collection<Customer>("customers").updateOne(
+    { _id: oid },
+    { $unset: { deleted: "" }, $set: { updatedAt: new Date() } }
+  );
   revalidatePath("/customers");
   revalidatePath("/");
   return {};

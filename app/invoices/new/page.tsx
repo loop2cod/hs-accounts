@@ -26,7 +26,12 @@ export default async function NewInvoicePage({
         <CardContent>
           <InvoiceForm
             customerId={customerId}
-            customers={customers.map((c) => ({ _id: c._id, name: c.name, shopName: c.shopName }))}
+            customers={customers.map((c) => ({ 
+              _id: c._id, 
+              name: c.name, 
+              shopName: c.shopName,
+              address: c.address 
+            }))}
             action={createInvoiceFromForm}
           />
         </CardContent>

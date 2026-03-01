@@ -41,7 +41,7 @@ export async function getInvoicesByCustomer(customerId: string) {
   }
   const list = await db
     .collection<Invoice>("invoices")
-    .find({ customerId: oid })
+    .find({ customerId: oid, deleted: { $ne: true } })
     .sort({ date: -1, createdAt: -1 })
     .toArray();
   return list.map((inv) => ({
@@ -56,6 +56,7 @@ export async function getInvoices(filters?: {
   customerId?: string;
   page?: number;
   limit?: number;
+  includeDeleted?: boolean;
 }) {
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
@@ -68,6 +69,7 @@ export async function getInvoices(filters?: {
       // ignore invalid id
     }
   }
+  if (!filters?.includeDeleted) query.deleted = { $ne: true };
 
   const page = filters?.page ?? 1;
   const limit = filters?.limit ?? 10;
@@ -97,7 +99,7 @@ export async function getInvoices(filters?: {
   };
 }
 
-export async function getInvoiceById(id: string) {
+export async function getInvoiceById(id: string, includeDeleted: boolean = false) {
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
   let oid: ObjectId;
@@ -106,7 +108,9 @@ export async function getInvoiceById(id: string) {
   } catch {
     return null;
   }
-  const inv = await db.collection<Invoice>("invoices").findOne({ _id: oid });
+  const query: any = { _id: oid };
+  if (!includeDeleted) query.deleted = { $ne: true };
+  const inv = await db.collection<Invoice>("invoices").findOne(query);
   if (!inv) return null;
   return {
     ...inv,
@@ -295,6 +299,42 @@ export async function updateInvoice(
   return { _id: id };
 }
 
+export async function deleteInvoice(id: string) {
+  const db = await getDb();
+  const { ObjectId } = await import("mongodb");
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(id);
+  } catch {
+    return { error: "Invalid id" };
+  }
+  await db.collection<Invoice>("invoices").updateOne(
+    { _id: oid },
+    { $set: { deleted: true, updatedAt: new Date() } }
+  );
+  revalidatePath("/invoices");
+  revalidatePath("/");
+  return {};
+}
+
+export async function restoreInvoice(id: string) {
+  const db = await getDb();
+  const { ObjectId } = await import("mongodb");
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(id);
+  } catch {
+    return { error: "Invalid id" };
+  }
+  await db.collection<Invoice>("invoices").updateOne(
+    { _id: oid },
+    { $unset: { deleted: "" }, $set: { updatedAt: new Date() } }
+  );
+  revalidatePath("/invoices");
+  revalidatePath("/");
+  return {};
+}
+
 export async function updateInvoiceFromForm(id: string, formData: FormData) {
   const customerId = String(formData.get("customerId") ?? "").trim();
   const withGst = formData.get("withGst") === "on" || formData.get("withGst") === "true";
@@ -313,7 +353,26 @@ export async function updateInvoiceFromForm(id: string, formData: FormData) {
     return { error: "Invalid line items" };
   }
 
-  if (!customerId) return { error: "Customer required" };
+  // For editing, allow empty customerId if the invoice already has a customer
+  if (!customerId) {
+    // Check if the invoice already exists and has a customer
+    const existingInvoice = await getInvoiceById(id);
+    if (!existingInvoice || !existingInvoice.customerId) {
+      return { error: "Customer required" };
+    }
+    // Use the existing customer ID
+    const result = await updateInvoice(id, {
+      customerId: existingInvoice.customerId,
+      withGst,
+      date,
+      shippingAddress,
+      freight,
+      lineItems,
+      notes,
+    });
+    if (result._id) redirect(`/invoices/${result._id}`);
+    return result;
+  }
 
   const filtered = lineItems.filter(
     (i) => i.description.trim() !== "" || i.quantity > 0 || i.unitPrice > 0
