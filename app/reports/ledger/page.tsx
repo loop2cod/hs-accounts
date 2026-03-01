@@ -52,7 +52,7 @@ export default async function LedgerReportPage({
                 className={`rounded px-2 py-1 text-sm ${customerId === c._id ? "bg-neutral-200" : "hover:bg-neutral-100"
                   }`}
               >
-                {c.name}
+                {c.name || c.shopName}
               </Link>
             ))}
           </div>

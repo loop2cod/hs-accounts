@@ -24,7 +24,7 @@ export default function LoginPage() {
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
                     <div className="flex justify-center">
-                        <img src="/logo.png" alt="HS Accounts" className="h-30 mix-blend-multiply scale-200" />
+                        <img src="/logo.png" alt="HS Accounts" className="w-30 mix-blend-multiply" />
                     </div>
                     <p className="text-sm text-neutral-500">Enter PIN to access your accounts</p>
                 </CardHeader>

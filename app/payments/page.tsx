@@ -81,7 +81,7 @@ export default async function PaymentsPage({
                       </div>
                       <div className="space-y-1 min-w-0">
                         <p className="font-semibold text-slate-900 truncate">
-                          {customerMap.get(p.customerId)?.name ?? "Unknown Customer"}
+                          {(customerMap.get(p.customerId)?.name || customerMap.get(p.customerId)?.shopName) ?? "Unknown Customer"}
                         </p>
                         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
                           <span className="flex items-center gap-1 font-medium whitespace-nowrap">

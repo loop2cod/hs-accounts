@@ -106,10 +106,10 @@ export default async function CustomersPage({
                   <CardContent className="flex items-center justify-between gap-4 py-4 px-6">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-primary font-bold group-hover:bg-primary/5">
-                        {c.name.charAt(0)}
+                        {(c.name || c.shopName || c.phone || "?").charAt(0).toUpperCase()}
                       </div>
                       <div className="space-y-1">
-                        <p className="font-semibold text-slate-900 leading-none">{c.name}</p>
+                        <p className="font-semibold text-slate-900 leading-none">{c.name || c.shopName || "-"}</p>
                         <div className="flex items-center gap-3 text-xs text-slate-500">
                           <span className="flex items-center gap-1">
                             <MapPin className="w-3 h-3" />

@@ -40,7 +40,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
             <option value="">Select customer</option>
             {customers.map((c) => (
               <option key={c._id} value={c._id}>
-                {c.name} – {c.shopName}
+                {c.name || c.shopName} – {c.shopName}
               </option>
             ))}
           </Select>

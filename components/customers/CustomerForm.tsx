@@ -34,15 +34,6 @@ export function CustomerForm({ customer, action }: CustomerFormProps) {
         </div>
       )}
       <div>
-        <label className="mb-1 block text-sm font-medium">Name *</label>
-        <Input
-          name="name"
-          required
-          defaultValue={customer?.name}
-          placeholder="Customer name"
-        />
-      </div>
-      <div>
         <label className="mb-1 block text-sm font-medium">Shop name *</label>
         <Input
           name="shopName"
@@ -59,6 +50,14 @@ export function CustomerForm({ customer, action }: CustomerFormProps) {
           required
           defaultValue={customer?.phone}
           placeholder="Phone"
+        />
+      </div>
+      <div>
+        <label className="mb-1 block text-sm font-medium">Name</label>
+        <Input
+          name="name"
+          defaultValue={customer?.name}
+          placeholder="Customer name"
         />
       </div>
       <div>

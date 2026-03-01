@@ -154,7 +154,7 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
               <option value="">Select a customer</option>
               {customers.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name} – {c.shopName}
+                  {c.name || c.shopName} – {c.shopName}
                 </option>
               ))}
             </Select>

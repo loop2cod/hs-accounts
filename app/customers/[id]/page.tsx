@@ -50,7 +50,7 @@ export default async function CustomerDetailPage({
             </Button>
           </Link>
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">{customer.name}</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-slate-900">{customer.name || customer.shopName}</h1>
             <p className="text-slate-500 font-medium">{customer.shopName}</p>
           </div>
         </div>
