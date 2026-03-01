@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Pagination } from "@/components/ui/Pagination";
+import { PaymentListItem } from "@/components/payments/PaymentListItem";
 import {
   CreditCard,
   Download,
   Plus,
-  ChevronRight,
   Calendar,
   Wallet
 } from "lucide-react";
@@ -71,36 +71,11 @@ export default async function PaymentsPage({
             <>
               <div className="divide-y divide-slate-100">
                 {payments.map((p: any) => (
-                  <div
+                  <PaymentListItem
                     key={p._id}
-                    className="flex items-center justify-between p-2 sm:p-6 hover:bg-slate-50 transition-colors group"
-                  >
-                    <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                      <div className="flex-shrink-0 w-10 h-10 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center">
-                        <Wallet className="w-5 h-5" />
-                      </div>
-                      <div className="space-y-1 min-w-0">
-                        <p className="font-semibold text-slate-900 truncate">
-                          {(customerMap.get(p.customerId)?.name || customerMap.get(p.customerId)?.shopName) ?? "Unknown Customer"}
-                        </p>
-                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                          <span className="flex items-center gap-1 font-medium whitespace-nowrap">
-                            <Calendar className="w-3 h-3" />
-                            {formatDate(p.date)}
-                          </span>
-                          <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-md font-bold uppercase tracking-wider text-[7.5px] whitespace-nowrap">
-                            {p.paymentMode}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0 ml-2 sm:ml-4">
-                      <span className="text-base sm:text-base font-bold text-green-600">
-                        +{formatCurrency(p.amount)}
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-400 group-hover:translate-x-0.5 transition-all" />
-                    </div>
-                  </div>
+                    payment={p}
+                    customerName={(customerMap.get(p.customerId)?.name || customerMap.get(p.customerId)?.shopName) ?? "Unknown Customer"}
+                  />
                 ))}
               </div>
               <div className="border-t border-slate-50 px-6">

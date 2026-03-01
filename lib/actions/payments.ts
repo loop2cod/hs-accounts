@@ -27,6 +27,25 @@ export async function getPaymentsByCustomer(customerId: string) {
   }));
 }
 
+export async function getPaymentById(id: string) {
+  const db = await getDb();
+  const { ObjectId } = await import("mongodb");
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(id);
+  } catch {
+    return null;
+  }
+  const p = await db.collection<Payment>("payments").findOne({ _id: oid });
+  if (!p) return null;
+  return {
+    ...p,
+    _id: p._id!.toString(),
+    customerId: p.customerId.toString(),
+    date: p.date instanceof Date ? p.date.toISOString().slice(0, 10) : p.date,
+  };
+}
+
 export async function getPayments(filters?: {
   customerId?: string;
   page?: number;
@@ -123,4 +142,75 @@ export async function createPaymentFromForm(formData: FormData) {
   });
   if (result._id) redirect(`/customers/${customerId}`);
   return result;
+}
+
+export async function updatePaymentFromForm(id: string, formData: FormData) {
+  const amount = parseFloat(String(formData.get("amount") ?? "0"));
+  const dateStr = String(formData.get("date") ?? "");
+  const date = dateStr ? new Date(dateStr) : new Date();
+  const paymentMode = String(formData.get("paymentMode") ?? "cash").trim();
+  const reference = String(formData.get("reference") ?? "").trim() || undefined;
+  const notes = String(formData.get("notes") ?? "").trim() || undefined;
+  if (!Number.isFinite(amount) || amount <= 0) return { error: "Valid amount required" };
+  const result = await updatePayment(id, { amount, date, paymentMode, reference, notes });
+  if (result.success) redirect("/payments");
+  return result;
+}
+
+export async function updatePayment(
+  id: string,
+  data: {
+    amount: number;
+    date: Date;
+    paymentMode: string;
+    reference?: string;
+    notes?: string;
+  }
+) {
+  const db = await getDb();
+  const { ObjectId } = await import("mongodb");
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(id);
+  } catch {
+    return { error: "Invalid payment ID" };
+  }
+  const updateDoc: Partial<Payment> = {
+    amount: data.amount,
+    date: data.date,
+    paymentMode: data.paymentMode,
+    reference: data.reference,
+    notes: data.notes,
+  };
+  const result = await db
+    .collection<Payment>("payments")
+    .updateOne({ _id: oid }, { $set: updateDoc });
+  if (result.matchedCount === 0) {
+    return { error: "Payment not found" };
+  }
+  const payment = await db.collection<Payment>("payments").findOne({ _id: oid });
+  revalidatePath("/payments");
+  revalidatePath("/");
+  revalidatePath(`/customers/${payment?.customerId.toString()}`);
+  return { success: true };
+}
+
+export async function deletePayment(id: string) {
+  const db = await getDb();
+  const { ObjectId } = await import("mongodb");
+  let oid: ObjectId;
+  try {
+    oid = new ObjectId(id);
+  } catch {
+    return { error: "Invalid payment ID" };
+  }
+  const payment = await db.collection<Payment>("payments").findOne({ _id: oid });
+  if (!payment) {
+    return { error: "Payment not found" };
+  }
+  await db.collection<Payment>("payments").deleteOne({ _id: oid });
+  revalidatePath("/payments");
+  revalidatePath("/");
+  revalidatePath(`/customers/${payment.customerId.toString()}`);
+  return { success: true };
 }

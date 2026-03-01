@@ -8,12 +8,20 @@ import { Select } from "@/components/ui/Select";
 const PAYMENT_MODES = ["Cash", "UPI", "Bank transfer", "Card", "Other"];
 
 interface PaymentFormProps {
-  customerId: string;
+  customerId?: string;
   customers: { _id: string; name: string; shopName: string }[];
   action: (formData: FormData) => Promise<{ error?: string }>;
+  defaultValues?: {
+    amount: number;
+    date: string;
+    paymentMode: string;
+    reference?: string;
+    notes?: string;
+  };
+  submitLabel?: string;
 }
 
-export function PaymentForm({ customerId, customers, action }: PaymentFormProps) {
+export function PaymentForm({ customerId, customers, action, defaultValues, submitLabel }: PaymentFormProps) {
   const [state, formAction] = useActionState(
     async (state: { error?: string } | null, formData: FormData) => action(formData),
     null as { error?: string } | null
@@ -29,22 +37,26 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
       )}
 
       <div className="space-y-4">
-        <div className="space-y-1.5">
-          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Customer *</label>
-          <Select
-            name="customerId"
-            required
-            defaultValue={customerId || undefined}
-            className="bg-slate-50/50 border-slate-200/50 focus:bg-white"
-          >
-            <option value="">Select customer</option>
-            {customers.map((c) => (
-              <option key={c._id} value={c._id}>
-                {c.name || c.shopName} – {c.shopName}
-              </option>
-            ))}
-          </Select>
-        </div>
+        {customerId ? (
+          <input type="hidden" name="customerId" value={customerId} />
+        ) : (
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Customer *</label>
+            <Select
+              name="customerId"
+              required
+              defaultValue={customerId || undefined}
+              className="bg-slate-50/50 border-slate-200/50 focus:bg-white"
+            >
+              <option value="">Select customer</option>
+              {customers.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name || c.shopName} – {c.shopName}
+                </option>
+              ))}
+            </Select>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -56,6 +68,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
               min="0.01"
               required
               placeholder="0.00"
+              defaultValue={defaultValues?.amount ?? ""}
               className="bg-slate-50/50 border-slate-200/50 focus:bg-white h-10"
             />
           </div>
@@ -65,7 +78,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
               name="date"
               type="date"
               required
-              defaultValue={today}
+              defaultValue={defaultValues?.date ?? today}
               className="bg-slate-50/50 border-slate-200/50 focus:bg-white h-10"
             />
           </div>
@@ -77,7 +90,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
             <Select
               name="paymentMode"
               required
-              defaultValue="Cash"
+              defaultValue={defaultValues?.paymentMode ?? "Cash"}
               className="bg-slate-50/50 border-slate-200/50 focus:bg-white h-10"
             >
               {PAYMENT_MODES.map((m) => (
@@ -92,6 +105,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
             <Input
               name="reference"
               placeholder="Optional"
+              defaultValue={defaultValues?.reference ?? ""}
               className="bg-slate-50/50 border-slate-200/50 focus:bg-white h-10"
             />
           </div>
@@ -103,7 +117,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
             name="notes"
             className="w-full rounded-xl border border-slate-200/60 bg-slate-50/50 px-4 py-3 text-sm focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all min-h-20 placeholder:text-slate-400 focus:bg-white"
             rows={2}
-            defaultValue=""
+            defaultValue={defaultValues?.notes ?? ""}
             placeholder="Add any additional details..."
           />
         </div>
@@ -111,7 +125,7 @@ export function PaymentForm({ customerId, customers, action }: PaymentFormProps)
 
       <div className="pt-2">
         <Button type="submit" className="w-full h-11 shadow-lg shadow-primary/20 font-bold tracking-wide">
-          Record Payment
+          {submitLabel ?? "Record Payment"}
         </Button>
       </div>
     </form>
