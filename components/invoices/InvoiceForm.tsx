@@ -207,11 +207,15 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
         <div className="space-y-4 md:space-y-0 md:border md:border-slate-100 md:rounded-xl md:overflow-hidden">
           {/* Desktop header */}
           <div className="hidden md:grid md:grid-cols-12 bg-slate-50/80 border-b border-slate-100 px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-            <div className="col-span-4">Description</div>
+            <div className="col-span-3">Description</div>
             <div className="col-span-2">HSN</div>
+            <div className="col-span-3">Narration</div>
             <div className="col-span-2 text-right">Qty</div>
             <div className="col-span-2 text-right">Rate</div>
-            <div className="col-span-2 text-right">Total</div>
+          </div>
+
+          <div className="hidden md:grid md:grid-cols-2 bg-slate-50/80 border-b border-slate-100 px-4 py-2 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="text-right">Total</div>
           </div>
 
           <div className="divide-y divide-slate-100">
@@ -225,7 +229,7 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
               >
                 {/* Mobile View Stacking */}
                 <div className="space-y-3 md:space-y-0 md:contents">
-                  <div className="md:col-span-4">
+                  <div className="md:col-span-3">
                     <label className="md:hidden text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Description</label>
                     <Input
                       className="border-slate-200/60 md:border-transparent bg-slate-50/30 md:bg-transparent focus:bg-white md:focus:border-slate-200 h-9 px-3 md:px-2 text-sm"
@@ -242,6 +246,16 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
                       value={item.hsnSac ?? ""}
                       onChange={(e) => updateLineItem(i, "hsnSac", e.target.value)}
                       placeholder="HSN"
+                    />
+                  </div>
+
+                  <div className="md:col-span-3">
+                    <label className="md:hidden text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 block">Narration</label>
+                    <Input
+                      className="border-slate-200/60 md:border-transparent bg-slate-50/30 md:bg-transparent focus:bg-white md:focus:border-slate-200 h-9 px-3 md:px-2 text-sm"
+                      value={item.narration ?? ""}
+                      onChange={(e) => updateLineItem(i, "narration", e.target.value)}
+                      placeholder="Narration..."
                     />
                   </div>
 

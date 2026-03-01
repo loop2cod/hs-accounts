@@ -17,6 +17,131 @@ function formatNum(n: number): string {
   return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+function generatePrintHtml(
+  invoice: NonNullable<Awaited<ReturnType<typeof getInvoiceById>>>,
+  customer: Awaited<ReturnType<typeof getCustomerById>>
+): string {
+  const { numberToWords } = require("@/lib/numberToWords");
+  
+  const custName = customer?.name || customer?.shopName || "—";
+  const itemsHtml = invoice.lineItems.map((item: any, i: number) => `
+    <tr>
+      <td style="border:1px solid #ccc;padding:4px;text-align:center">${i + 1}</td>
+      <td style="border:1px solid #ccc;padding:4px">${item.description}</td>
+      <td style="border:1px solid #ccc;padding:4px">${item.hsnSac || ""}</td>
+      <td style="border:1px solid #ccc;padding:4px">${item.narration || ""}</td>
+      <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(item.unitPrice)}</td>
+      <td style="border:1px solid #ccc;padding:4px;text-align:right">${item.quantity}</td>
+      <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(item.totalRow ?? item.amount + (item.gstAmount ?? 0))}</td>
+    </tr>
+  `).join("");
+
+  const subtotalRow = `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Subtotal:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(invoice.subtotal)}</td></tr>`;
+  
+  let totalsHtml = subtotalRow;
+  if (invoice.freight != null && invoice.freight > 0) {
+    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">Freight:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">+${formatNum(invoice.freight)}</td></tr>`;
+  }
+  if (invoice.withGst && invoice.totalGst != null) {
+    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">GST (5%):</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(invoice.totalGst)}</td></tr>`;
+  }
+  totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Grand Total:</td><td style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">${formatNum(invoice.totalAmount)}</td></tr>`;
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Invoice ${invoice.invoiceNumber}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Arial,sans-serif; font-size: 13px; padding: 20px; }
+    .header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .logo { height: 50px; }
+    .meta { text-align: right; }
+    .title { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+    .addresses { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .address { width: 48%; border: 1px solid #ccc; padding: 8px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { background: #f0f0f0; border: 1px solid #ccc; padding: 4px; text-align: left; font-weight: bold; font-size: 12px; }
+    .totals { display: flex; justify-content: space-between; }
+    .totals-left { width: 70%; border: 1px solid #ccc; padding: 8px; }
+    .totals-right { width: 28%; }
+    .totals-right table { width: 100%; }
+    .totals-right td { border: 1px solid #ccc; padding: 4px; }
+    .footer { border: 1px solid #ccc; padding: 8px; margin-top: 20px; }
+    @media print {
+      body { padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      @page { margin: 0.5cm; size: auto; }
+    }
+  </style>
+</head>
+<body onload="window.print()">
+  <div class="header">
+    <div class="logo"><img src="/logo.png" alt="HS Accounts" style="height:50px"></div>
+    <div class="meta">
+      <div class="title">${invoice.withGst ? "TAX INVOICE" : "INVOICE"}</div>
+      <div>Invoice No.: ${invoice.invoiceNumber}</div>
+      <div>Date: ${formatDate(invoice.date)}</div>
+      <div>Due Date: ${formatDate(invoice.date)}</div>
+    </div>
+  </div>
+  
+  <div class="addresses">
+    <div class="address">
+      <strong>NAME:</strong> ${custName}<br>
+      <strong>ADDRESS:</strong> ${customer?.address || "—"}<br>
+      ${customer?.gstNumber ? `<strong>GST IN:</strong> ${customer.gstNumber}<br>` : ""}
+      ${customer?.panNumber ? `<strong>PAN:</strong> ${customer.panNumber}<br>` : ""}
+      <strong>Phone:</strong> ${customer?.phone || "—"}
+    </div>
+    <div class="address">
+      <strong>SHIPPING ADDRESS</strong><br>
+      <strong>NAME:</strong> ${custName}<br>
+      <strong>ADDRESS:</strong> ${invoice.shippingAddress || customer?.address || "—"}
+    </div>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:center;width:30px">#</th>
+        <th>Commodity / Item</th>
+        <th style="width:60px">HSN/SAC</th>
+        <th style="width:80px">Narration</th>
+        <th style="text-align:right;width:70px">Unit Price</th>
+        <th style="text-align:right;width:50px">Qty</th>
+        <th style="text-align:right;width:80px">Amount</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${itemsHtml}
+    </tbody>
+  </table>
+  
+  <div class="totals">
+    <div class="totals-left">
+      <strong>Grand Total in words:</strong><br>
+      <strong>${numberToWords(invoice.totalAmount).toLowerCase()}</strong>
+      ${invoice.notes ? `<br><br><strong>Notes:</strong> ${invoice.notes}` : ""}
+    </div>
+    <div class="totals-right">
+      <table>
+        ${totalsHtml}
+      </table>
+    </div>
+  </div>
+  
+  <div class="footer">
+    <strong>DECLARATION:</strong> Certified that all the particulars shown in the above invoice are true and correct.
+    <div style="text-align:right;margin-top:30px">
+      <span>for <strong>HS Hajass Traders</strong></span><br><br>
+      <span>Authorised Signatory</span>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -27,6 +152,17 @@ export async function GET(
     return new Response("Invoice not found", { status: 404 });
   }
   const customer = await getCustomerById(invoice.customerId);
+
+  const isPrint = _request.nextUrl.searchParams.get("print") === "true";
+
+  if (isPrint) {
+    const html = generatePrintHtml(invoice!, customer);
+    return new Response(html, {
+      headers: {
+        "Content-Type": "text/html",
+      },
+    });
+  }
 
   const doc = new jsPDF();
   const margin = 20;
@@ -42,7 +178,7 @@ export async function GET(
     if (logoRes.ok) {
       const logoBuffer = await logoRes.arrayBuffer();
       const logoBase64 = Buffer.from(logoBuffer).toString("base64");
-      doc.addImage(logoBase64, "PNG", margin, y, 20, 20); // 20x20 size
+      doc.addImage(logoBase64, "PNG", margin, y, 30, 15); // 20x20 size
       y += 20; // adjust y for the next sections based on image height
     } else {
       throw new Error("Logo fetch failed");
@@ -93,10 +229,12 @@ export async function GET(
   y += 6;
   doc.setFont("helvetica", "normal");
   if (customer) {
-    doc.text(customer.name, margin, y);
+    doc.text(customer.name || customer.shopName || "—", margin, y);
     y += 5;
-    doc.text(customer.shopName, margin, y);
-    y += 5;
+    if (customer.name) {
+      doc.text(customer.shopName, margin, y);
+      y += 5;
+    }
     if (customer.address) {
       const addrLines = doc.splitTextToSize(customer.address, contentWidth);
       doc.text(addrLines, margin, y);

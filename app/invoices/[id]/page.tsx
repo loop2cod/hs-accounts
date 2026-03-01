@@ -69,7 +69,7 @@ export default async function InvoiceViewPage({
               PDF
             </Button>
           </a>
-          <PrintButton />
+          <PrintButton invoiceId={id} />
         </div>
       </header>
 
@@ -93,6 +93,7 @@ export default async function InvoiceViewPage({
                   <thead className="bg-slate-50/50 border-b border-slate-100">
                     <tr>
                       <th className="text-left font-bold text-slate-400 uppercase tracking-widest text-[10px] px-6 py-3">Description</th>
+                      <th className="text-left font-bold text-slate-400 uppercase tracking-widest text-[10px] px-6 py-3">Narration</th>
                       <th className="text-right font-bold text-slate-400 uppercase tracking-widest text-[10px] px-6 py-3">Qty</th>
                       <th className="text-right font-bold text-slate-400 uppercase tracking-widest text-[10px] px-6 py-3">Rate</th>
                       <th className="text-right font-bold text-slate-400 uppercase tracking-widest text-[10px] px-6 py-3">Total</th>
@@ -105,6 +106,7 @@ export default async function InvoiceViewPage({
                           <p className="font-semibold text-slate-900">{item.description}</p>
                           {item.hsnSac && <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">HSN: {item.hsnSac}</p>}
                         </td>
+                        <td className="px-6 py-4 text-slate-600">{item.narration || "-"}</td>
                         <td className="px-6 py-4 text-right tabular-nums text-slate-600">{item.quantity}</td>
                         <td className="px-6 py-4 text-right tabular-nums text-slate-600">{formatCurrency(item.unitPrice)}</td>
                         <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
@@ -227,7 +229,7 @@ export default async function InvoiceViewPage({
       </div>
 
       {/* Invoice Document - PRINT ONLY TEMPLATE */}
-      <div className="hidden print:block invoice-doc mx-auto max-w-none px-0 py-0 print:max-w-none bg-white">
+      <div className="invoice-doc invoice-print-template mx-auto max-w-none px-0 py-0 bg-white hidden print:block">
         <div className="inv-header">
           <div className="inv-header-left flex gap-4 items-center">
             <img src="/logo.png" alt="HS Accounts Logo" className="h-16 w-auto mix-blend-multiply scale-125" />
