@@ -164,8 +164,8 @@ export async function updateCustomerFromForm(id: string, state: any, formData: F
   const shopName = String(formData.get("shopName") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
 
-  if (!name || !shopName || !phone) {
-    return { error: "Name, shop name, and phone are required." };
+  if (!shopName || !phone) {
+    return { error: "Shop name and phone are required." };
   }
 
   const db = await getDb();
@@ -189,7 +189,7 @@ export async function updateCustomerFromForm(id: string, state: any, formData: F
       ? parseInt(String(routeOrderRaw), 10)
       : undefined;
   await updateCustomer(id, {
-    name,
+    name: name || undefined,
     shopName,
     phone,
     address: String(formData.get("address") ?? "").trim() || undefined,

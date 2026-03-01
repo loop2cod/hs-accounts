@@ -107,21 +107,21 @@ export default async function CustomerDetailPage({
             </CardContent>
           </Card>
 
-          <Card className="bg-primary text-white border-none shadow-lg shadow-primary/20">
+          <Card className="border-none shadow-lg shadow-primary/20">
             <CardContent className="p-6 space-y-4">
-              <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-80 text-white">Financial Summary</h2>
+              <h2 className="text-xs font-bold uppercase tracking-[0.2em] opacity-80">Financial Summary</h2>
               <div className="space-y-1">
                 <p className="text-3xl font-bold">{formatCurrency(balance.balance)}</p>
                 <p className="text-sm opacity-80">Current Outstanding Balance</p>
               </div>
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-white/10">
+              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
                 <div>
                   <p className="text-[10px] font-bold uppercase opacity-60">Total Billable</p>
                   <p className="text-sm font-semibold">{formatCurrency(balance.due)}</p>
                 </div>
                 <div>
                   <p className="text-[10px] font-bold uppercase opacity-60">Total Received</p>
-                  <p className="text-sm font-semibold text-blue-100">{formatCurrency(balance.paid)}</p>
+                  <p className="text-sm font-semibold">{formatCurrency(balance.paid)}</p>
                 </div>
               </div>
             </CardContent>

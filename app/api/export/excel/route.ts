@@ -64,10 +64,12 @@ export async function GET(request: NextRequest) {
     case "due-balance": {
       const rows = await getDueBalanceReport();
       data = [
-        ["Customer", "Shop", "Due", "Paid", "Balance"],
+        ["Shop", "Name", "Weekday", "Opening Balance", "Due", "Paid", "Balance"],
         ...rows.map((r) => [
-          r.customerName,
           r.shopName,
+          r.customerName,
+          r.routeWeekday,
+          r.openingBalance,
           r.due,
           r.paid,
           r.balance,

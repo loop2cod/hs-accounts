@@ -8,22 +8,26 @@ export interface DueBalanceRow {
   customerId: string;
   customerName: string;
   shopName: string;
+  routeWeekday: number;
+  openingBalance: number;
   due: number;
   paid: number;
   balance: number;
 }
 
-export async function getDueBalanceReport(): Promise<DueBalanceRow[]> {
+export async function getDueBalanceReport(weekdayFilter?: number): Promise<DueBalanceRow[]> {
   const db = await getDb();
+  const filter = weekdayFilter !== undefined ? { routeWeekday: weekdayFilter } : {};
   const customers = await db
     .collection<Customer>("customers")
-    .find({})
-    .sort({ name: 1 })
+    .find(filter)
+    .sort({ shopName: 1, name: 1, routeWeekday: 1 })
     .toArray();
 
   const rows: DueBalanceRow[] = [];
   for (const c of customers) {
     const oid = c._id!;
+    const openingBalance = c.openingBalance ?? 0;
     const invAgg = await db
       .collection("invoices")
       .aggregate<{ total: number }>([
@@ -38,12 +42,14 @@ export async function getDueBalanceReport(): Promise<DueBalanceRow[]> {
         { $group: { _id: null, total: { $sum: "$amount" } } },
       ])
       .toArray();
-    const due = invAgg[0]?.total ?? 0;
+    const due = (invAgg[0]?.total ?? 0) + openingBalance;
     const paid = payAgg[0]?.total ?? 0;
     rows.push({
       customerId: oid.toString(),
       customerName: c.name,
       shopName: c.shopName,
+      routeWeekday: c.routeWeekday,
+      openingBalance,
       due,
       paid,
       balance: due - paid,
