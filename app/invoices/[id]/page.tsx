@@ -232,7 +232,21 @@ export default async function InvoiceViewPage({
       <div className="invoice-doc invoice-print-template mx-auto max-w-none px-0 py-0 bg-white hidden print:block">
         <div className="inv-header">
           <div className="inv-header-left flex gap-4 items-center">
-            <img src="/logo.png" alt="HS Accounts Logo" className="h-16 w-auto mix-blend-multiply scale-125" />
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-14 h-14 bg-red-600 flex items-center justify-center text-white text-2xl font-bold rounded">HS</div>
+                <div>
+                  <div className="text-3xl font-bold text-red-600 tracking-wider">HAJASS</div>
+                  <div className="text-sm font-bold text-red-600 tracking-[0.3em]">TRADERS</div>
+                </div>
+              </div>
+              <div className="text-xs text-gray-600 leading-relaxed border-l border-gray-300 pl-4">
+                <div>GSTIN: 32BECPH7018J1ZR</div>
+                <div>18/883 Pakker HajiComplex, Gandhi Park,</div>
+                <div>Payyannur, Kannur</div>
+                <div>Mob: 8078267673</div>
+              </div>
+            </div>
           </div>
           <div className="inv-meta">
             <div className="inv-title">
@@ -378,7 +392,7 @@ export default async function InvoiceViewPage({
             <strong>DECLARATION:</strong> Certified that all the particulars shown in the above invoice are true and correct.
           </div>
           <div className="text-right flex flex-col items-end">
-            <span className="mb-8">for <strong>HS Hajass Traders</strong></span>
+            <span className="mb-8">for <strong>HAJASS TRADERS</strong></span>
             <span>Authorised Signatory</span>
           </div>
         </div>

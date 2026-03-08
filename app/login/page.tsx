@@ -24,7 +24,13 @@ export default function LoginPage() {
             <Card className="w-full max-w-sm">
                 <CardHeader className="text-center">
                     <div className="flex justify-center">
-                        <img src="/logo.png" alt="HS Accounts" className="w-30 mix-blend-multiply" />
+                        <div className="flex items-center gap-3">
+                            <div className="w-14 h-14 bg-red-600 flex items-center justify-center text-white text-2xl font-bold rounded">HS</div>
+                            <div className="text-left">
+                                <div className="text-2xl font-bold text-red-600 tracking-wider">HAJASS</div>
+                                <div className="text-xs font-bold text-red-600 tracking-[0.3em]">TRADERS</div>
+                            </div>
+                        </div>
                     </div>
                     <p className="text-sm text-neutral-500">Enter PIN to access your accounts</p>
                 </CardHeader>

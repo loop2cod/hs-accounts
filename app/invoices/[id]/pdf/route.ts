@@ -77,7 +77,18 @@ function generatePrintHtml(
 </head>
 <body onload="window.print()">
   <div class="header">
-    <div class="logo"><img src="/logo.png" alt="HS Accounts" style="height:50px"></div>
+    <div class="logo" style="display:flex;align-items:center;gap:12px">
+      <div style="width:50px;height:50px;background:#dc2626;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;font-weight:bold;border-radius:4px">HS</div>
+      <div>
+        <div style="font-size:28px;font-weight:bold;color:#dc2626;letter-spacing:2px">HAJASS</div>
+        <div style="font-size:14px;font-weight:bold;color:#dc2626;letter-spacing:4px">TRADERS</div>
+      </div>
+      <div style="margin-left:12px;font-size:11px;color:#666;line-height:1.4">
+        <div>GSTIN: 32BECPH7018J1ZR</div>
+        <div>18/883 Pakker HajiComplex, Gandhi Park, Payyannur, Kannur</div>
+        <div>Mob: 8078267673</div>
+      </div>
+    </div>
     <div class="meta">
       <div class="title">${invoice.withGst ? "TAX INVOICE" : "INVOICE"}</div>
       <div>Invoice No.: ${invoice.invoiceNumber}</div>
@@ -134,7 +145,7 @@ function generatePrintHtml(
   <div class="footer">
     <strong>DECLARATION:</strong> Certified that all the particulars shown in the above invoice are true and correct.
     <div style="text-align:right;margin-top:30px">
-      <span>for <strong>HS Hajass Traders</strong></span><br><br>
+      <span>for <strong>HAJASS TRADERS</strong></span><br><br>
       <span>Authorised Signatory</span>
     </div>
   </div>
@@ -184,19 +195,34 @@ export async function GET(
       throw new Error("Logo fetch failed");
     }
   } catch {
-    doc.setFontSize(18);
+    // Draw red box with HS
+    doc.setFillColor(220, 38, 38);
+    doc.rect(margin, y - 5, 15, 15, 'F');
+    doc.setFontSize(14);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(37, 99, 235);
-    doc.text("HS", margin, y);
+    doc.setTextColor(255, 255, 255);
+    doc.text("HS", margin + 4, y + 5);
+    
+    // Company name
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(220, 38, 38);
+    doc.text("HAJASS", margin + 20, y);
+    doc.setFontSize(10);
+    doc.text("TRADERS", margin + 20, y + 5);
     doc.setTextColor(0, 0, 0);
-    y += 6;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(115, 115, 115);
-    doc.text("Hajass Traders", margin, y);
-    doc.setTextColor(0, 0, 0);
-    y += 10;
+    y += 12;
   }
+  
+  // Company details
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "normal");
+  doc.text("GSTIN: 32BECPH7018J1ZR", margin, y);
+  y += 4;
+  doc.text("18/883 Pakker HajiComplex, Gandhi Park, Payyannur, Kannur", margin, y);
+  y += 4;
+  doc.text("Mob: 8078267673", margin, y);
+  y += 8;
 
   doc.setFontSize(20);
   doc.setFont("helvetica", "bold");
@@ -390,9 +416,9 @@ export async function GET(
   doc.setFont("helvetica", "normal");
   doc.text("DECLARATION : Certified that all the particulars shown in the above invoice are true and correct", margin + 2, totY + 5);
 
-  doc.text("for", pageWidth - margin - 40, totY + 12);
+  doc.text("for", pageWidth - margin - 50, totY + 12);
   doc.setFont("helvetica", "bold");
-  doc.text("HS Hajass Traders", pageWidth - margin - 2, totY + 12, { align: "right" });
+  doc.text("HAJASS TRADERS", pageWidth - margin - 2, totY + 12, { align: "right" });
 
   doc.setFont("helvetica", "normal");
   doc.text("Authorised Signatory", pageWidth - margin - 2, totY + 18, { align: "right" });

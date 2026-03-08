@@ -30,7 +30,7 @@ export function AppNav() {
       {/* Mobile Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 h-14 bg-white/80 backdrop-blur-lg border-b border-slate-100 md:hidden">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-900 text-base tracking-tight">HS Traders</span>
+          <span className="font-bold text-red-600 text-base tracking-tight">HAJASS TRADERS</span>
         </div>
         <form action={logout}>
           <button
@@ -49,7 +49,7 @@ export function AppNav() {
       >
         <div className="max-w-7xl mx-auto w-full flex justify-around items-center md:px-6">
           <div className="hidden md:flex items-center gap-2 mr-8">
-            <span className="font-bold text-slate-900 text-lg tracking-tight">HS Traders</span>
+            <span className="font-bold text-red-600 text-lg tracking-tight">HAJASS TRADERS</span>
           </div>
 
           <ul className="flex flex-1 justify-around items-center gap-1 md:justify-start md:gap-2">
