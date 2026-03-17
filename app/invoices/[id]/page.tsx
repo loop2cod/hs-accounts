@@ -110,7 +110,7 @@ export default async function InvoiceViewPage({
                         <td className="px-6 py-4 text-right tabular-nums text-slate-600">{item.quantity}</td>
                         <td className="px-6 py-4 text-right tabular-nums text-slate-600">{formatCurrency(item.unitPrice)}</td>
                         <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
-                          {formatCurrency(item.totalRow ?? item.amount + (item.gstAmount ?? 0))}
+                          {formatCurrency(item.amount)}
                         </td>
                       </tr>
                     ))}
@@ -316,9 +316,7 @@ export default async function InvoiceViewPage({
                 <td className="border border-neutral-300 p-1 text-right">{formatCurrency(item.unitPrice)}</td>
                 <td className="border border-neutral-300 p-1 text-right">{item.quantity}</td>
                 <td className="border border-neutral-300 p-1 text-right">
-                  {formatCurrency(
-                    item.totalRow ?? item.amount + (item.gstAmount ?? 0)
-                  )}
+                  {formatCurrency(item.amount)}
                 </td>
               </tr>
             ))}

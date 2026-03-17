@@ -287,10 +287,7 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
                     <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subtotal</label>
                       <span className="font-bold text-slate-900 tabular-nums">
-                        {(
-                          item.quantity * item.unitPrice +
-                          (withGst ? 5 * (item.quantity * item.unitPrice) / 100 : 0)
-                        ).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {(item.quantity * item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       </span>
                     </div>
                   </div>
@@ -349,13 +346,9 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
                     </div>
                   </div>
 
-                  {/* Subtotal for desktop */}
                   <div className="hidden md:flex md:items-center md:justify-end md:px-4 md:py-3 md:border-t md:border-slate-100">
                     <span className="font-bold text-slate-900 tabular-nums">
-                      {(
-                        item.quantity * item.unitPrice +
-                        (withGst ? 5 * (item.quantity * item.unitPrice) / 100 : 0)
-                      ).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      {(item.quantity * item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
 

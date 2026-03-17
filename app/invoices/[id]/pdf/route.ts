@@ -32,7 +32,7 @@ function generatePrintHtml(
       <td style="border:1px solid #ccc;padding:4px">${item.narration || ""}</td>
       <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(item.unitPrice)}</td>
       <td style="border:1px solid #ccc;padding:4px;text-align:right">${item.quantity}</td>
-      <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(item.totalRow ?? item.amount + (item.gstAmount ?? 0))}</td>
+      <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(item.amount)}</td>
     </tr>
   `).join("");
 
@@ -287,8 +287,6 @@ export async function GET(
 
   const rows = invoice.lineItems.map((item, i) => {
     const amount = item.quantity * item.unitPrice;
-    const gstAmt = item.gstAmount ?? 0;
-    const total = amount + gstAmt;
     totalQty += item.quantity;
 
     return [
@@ -298,7 +296,7 @@ export async function GET(
       item.narration || "",
       formatNum(item.unitPrice),
       String(item.quantity),
-      formatNum(total),
+      formatNum(amount),
     ];
   });
 
