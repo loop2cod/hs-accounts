@@ -104,7 +104,7 @@ export default async function InvoiceViewPage({
                       <tr key={i} className="hover:bg-slate-50/30 transition-colors">
                         <td className="px-6 py-4">
                           <p className="font-semibold text-slate-900">{item.description}</p>
-                          {item.hsnSac && <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">HSN: {item.hsnSac}</p>}
+                          {invoice.withGst && item.hsnSac && <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">HSN: {item.hsnSac}</p>}
                         </td>
                         <td className="px-6 py-4 text-slate-600">{item.narration || "-"}</td>
                         <td className="px-6 py-4 text-right tabular-nums text-slate-600">{item.quantity}</td>
@@ -241,7 +241,7 @@ export default async function InvoiceViewPage({
                 </div>
               </div>
               <div className="text-xs text-gray-600 leading-relaxed border-l border-gray-300 pl-4">
-                <div>GSTIN: 32BECPH7018J1ZR</div>
+                {invoice.withGst && <div>GSTIN: 32BECPH7018J1ZR</div>}
                 <div>18/883 Pakker HajiComplex, Gandhi Park,</div>
                 <div>Payyannur, Kannur</div>
                 <div>Mob: 8078267673</div>
@@ -270,7 +270,7 @@ export default async function InvoiceViewPage({
             <br />
             <strong>ADDRESS:</strong> {customer?.address || "—"}
             <br />
-            {customer?.gstNumber && (
+            {invoice.withGst && customer?.gstNumber && (
               <>
                 <strong>GST IN:</strong> {customer.gstNumber}
                 <br />
@@ -299,7 +299,7 @@ export default async function InvoiceViewPage({
             <tr>
               <th className="border border-neutral-300 p-1 w-8 text-center">#</th>
               <th className="border border-neutral-300 p-1 text-left">Commodity / Item</th>
-              <th className="border border-neutral-300 p-1 w-24 text-left">HSN/SAC</th>
+              {invoice.withGst && <th className="border border-neutral-300 p-1 w-24 text-left">HSN/SAC</th>}
               <th className="border border-neutral-300 p-1 text-left">Narration</th>
               <th className="border border-neutral-300 p-1 w-24 text-right">Unit Price</th>
               <th className="border border-neutral-300 p-1 w-16 text-right">Qty</th>
@@ -311,7 +311,7 @@ export default async function InvoiceViewPage({
               <tr key={i}>
                 <td className="border border-neutral-300 p-1 text-center">{i + 1}</td>
                 <td className="border border-neutral-300 p-1">{item.description}</td>
-                <td className="border border-neutral-300 p-1">{item.hsnSac || ""}</td>
+                {invoice.withGst && <td className="border border-neutral-300 p-1">{item.hsnSac || ""}</td>}
                 <td className="border border-neutral-300 p-1">{item.narration || ""}</td>
                 <td className="border border-neutral-300 p-1 text-right">{formatCurrency(item.unitPrice)}</td>
                 <td className="border border-neutral-300 p-1 text-right">{item.quantity}</td>

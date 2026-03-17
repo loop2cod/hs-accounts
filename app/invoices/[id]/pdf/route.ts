@@ -22,13 +22,13 @@ function generatePrintHtml(
   customer: Awaited<ReturnType<typeof getCustomerById>>
 ): string {
   const { numberToWords } = require("@/lib/numberToWords");
-  
+
   const custName = customer?.name || customer?.shopName || "—";
   const itemsHtml = invoice.lineItems.map((item: any, i: number) => `
     <tr>
       <td style="border:1px solid #ccc;padding:4px;text-align:center">${i + 1}</td>
       <td style="border:1px solid #ccc;padding:4px">${item.description}</td>
-      <td style="border:1px solid #ccc;padding:4px">${item.hsnSac || ""}</td>
+      ${invoice.withGst ? `<td style="border:1px solid #ccc;padding:4px">${item.hsnSac || ""}</td>` : ""}
       <td style="border:1px solid #ccc;padding:4px">${item.narration || ""}</td>
       <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(item.unitPrice)}</td>
       <td style="border:1px solid #ccc;padding:4px;text-align:right">${item.quantity}</td>
@@ -37,7 +37,7 @@ function generatePrintHtml(
   `).join("");
 
   const subtotalRow = `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Subtotal:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(invoice.subtotal)}</td></tr>`;
-  
+
   let totalsHtml = subtotalRow;
   if (invoice.freight != null && invoice.freight > 0) {
     totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">Freight:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">+${formatNum(invoice.freight)}</td></tr>`;
@@ -84,7 +84,7 @@ function generatePrintHtml(
         <div style="font-size:14px;font-weight:bold;color:#dc2626;letter-spacing:4px">TRADERS</div>
       </div>
       <div style="margin-left:12px;font-size:11px;color:#666;line-height:1.4">
-        <div>GSTIN: 32BECPH7018J1ZR</div>
+        ${invoice.withGst ? `<div>GSTIN: 32BECPH7018J1ZR</div>` : ""}
         <div>18/883 Pakker HajiComplex, Gandhi Park, Payyannur, Kannur</div>
         <div>Mob: 8078267673</div>
       </div>
@@ -101,7 +101,7 @@ function generatePrintHtml(
     <div class="address">
       <strong>NAME:</strong> ${custName}<br>
       <strong>ADDRESS:</strong> ${customer?.address || "—"}<br>
-      ${customer?.gstNumber ? `<strong>GST IN:</strong> ${customer.gstNumber}<br>` : ""}
+      ${invoice.withGst && customer?.gstNumber ? `<strong>GST IN:</strong> ${customer.gstNumber}<br>` : ""}
       ${customer?.panNumber ? `<strong>PAN:</strong> ${customer.panNumber}<br>` : ""}
       <strong>Phone:</strong> ${customer?.phone || "—"}
     </div>
@@ -117,7 +117,7 @@ function generatePrintHtml(
       <tr>
         <th style="text-align:center;width:30px">#</th>
         <th>Commodity / Item</th>
-        <th style="width:60px">HSN/SAC</th>
+        ${invoice.withGst ? `<th style="width:60px">HSN/SAC</th>` : ""}
         <th style="width:80px">Narration</th>
         <th style="text-align:right;width:70px">Unit Price</th>
         <th style="text-align:right;width:50px">Qty</th>
@@ -190,7 +190,7 @@ export async function GET(
       const logoBuffer = await logoRes.arrayBuffer();
       const logoBase64 = Buffer.from(logoBuffer).toString("base64");
       doc.addImage(logoBase64, "PNG", margin, y, 30, 15); // 20x20 size
-      y += 20; // adjust y for the next sections based on image height
+      y += 20; // adjust y for the next sections based on image height 
     } else {
       throw new Error("Logo fetch failed");
     }
@@ -202,7 +202,7 @@ export async function GET(
     doc.setFont("helvetica", "bold");
     doc.setTextColor(255, 255, 255);
     doc.text("HS", margin + 4, y + 5);
-    
+
     // Company name
     doc.setFontSize(16);
     doc.setFont("helvetica", "bold");
@@ -213,12 +213,14 @@ export async function GET(
     doc.setTextColor(0, 0, 0);
     y += 12;
   }
-  
+
   // Company details
   doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
-  doc.text("GSTIN: 32BECPH7018J1ZR", margin, y);
-  y += 4;
+  if (invoice.withGst) {
+    doc.text("GSTIN: 32BECPH7018J1ZR", margin, y);
+    y += 4;
+  }
   doc.text("18/883 Pakker HajiComplex, Gandhi Park, Payyannur, Kannur", margin, y);
   y += 4;
   doc.text("Mob: 8078267673", margin, y);
@@ -266,7 +268,7 @@ export async function GET(
       doc.text(addrLines, margin, y);
       y += addrLines.length * 5;
     }
-    if (customer.gstNumber) {
+    if (invoice.withGst && customer.gstNumber) {
       doc.text(`GST: ${customer.gstNumber}`, margin, y);
       y += 5;
     }
@@ -281,7 +283,7 @@ export async function GET(
   }
 
   // ----- Items table -----
-  const headers = ["#", "Commodity / Item", "HSN/SAC", "Narration", "Unit Price", "Qty", "Amount"];
+  const headers = ["#", "Commodity / Item", ...(invoice.withGst ? ["HSN/SAC"] : []), "Narration", "Unit Price", "Qty", "Amount"];
 
   let totalQty = 0;
 
@@ -289,15 +291,21 @@ export async function GET(
     const amount = item.quantity * item.unitPrice;
     totalQty += item.quantity;
 
-    return [
+    const row = [
       String(i + 1),
       item.description,
-      item.hsnSac || "",
+    ];
+    if (invoice.withGst) {
+      row.push(item.hsnSac || "");
+    }
+    row.push(
       item.narration || "",
       formatNum(item.unitPrice),
       String(item.quantity),
-      formatNum(amount),
-    ];
+      formatNum(amount)
+    );
+
+    return row;
   });
 
   autoTable(doc, {
@@ -318,7 +326,7 @@ export async function GET(
       lineColor: [200, 200, 200],
       lineWidth: 0.1,
     },
-    columnStyles: {
+    columnStyles: invoice.withGst ? {
       0: { cellWidth: 8, halign: "center" },
       1: { cellWidth: "auto" },
       2: { cellWidth: 18 },
@@ -326,6 +334,13 @@ export async function GET(
       4: { halign: "right", cellWidth: 20 },
       5: { halign: "right", cellWidth: 15 },
       6: { halign: "right", cellWidth: 25 },
+    } : {
+      0: { cellWidth: 8, halign: "center" },
+      1: { cellWidth: "auto" },
+      2: { cellWidth: 30 }, // Narration
+      3: { halign: "right", cellWidth: 25 }, // Unit Price
+      4: { halign: "right", cellWidth: 20 }, // Qty
+      5: { halign: "right", cellWidth: 30 }, // Amount
     },
     margin: { left: margin, right: margin },
     tableWidth: contentWidth,

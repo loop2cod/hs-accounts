@@ -352,11 +352,10 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
                     </span>
                   </div>
 
-                  {/* Remove button */}
                   <button
                     type="button"
                     onClick={() => removeRow(i)}
-                    className="absolute top-2 right-2 md:static md:top-auto md:right-auto md:w-7 md:h-7 md:flex md:items-center md:justify-center md:rounded-full md:bg-red-50 md:text-red-500 md:border md:border-red-100 md:md:border-0 md:bg-transparent md:text-slate-300 md:hover:text-red-500 md:hover:bg-red-50 md:transition-all md:opacity-0 md:group-hover:opacity-100"
+                    className="absolute top-2 right-2 md:static md:top-auto md:right-auto md:w-7 md:h-7 md:flex md:items-center md:justify-center md:rounded-full bg-red-50 text-red-500 border border-red-100 md:border-0 md:bg-transparent md:text-slate-300 md:hover:text-red-500 md:hover:bg-red-50 md:transition-all md:opacity-0 md:group-hover:opacity-100"
                     title="Delete item"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
