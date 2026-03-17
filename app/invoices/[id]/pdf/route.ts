@@ -436,11 +436,12 @@ export async function GET(
   doc.setFont("helvetica", "normal");
   doc.text("Authorised Signatory", pageWidth - margin - 2, totY + 18, { align: "right" });
 
+  const shopNameStr = (customer?.shopName || customer?.name || "Customer").replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
   const buffer = Buffer.from(doc.output("arraybuffer"));
   return new Response(buffer, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="invoice-${invoice.invoiceNumber}.pdf"`,
+      "Content-Disposition": `attachment; filename="invoice-${invoice.invoiceNumber}-${shopNameStr}.pdf"`,
     },
   });
 }
