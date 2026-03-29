@@ -41,9 +41,12 @@ function generatePrintHtml(
   let totalsHtml = subtotalRow;
   if (invoice.freight != null && invoice.freight > 0) {
     totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">Freight:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">+${formatNum(invoice.freight)}</td></tr>`;
+    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">Taxable Amt:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(invoice.subtotal + invoice.freight)}</td></tr>`;
   }
   if (invoice.withGst && invoice.totalGst != null) {
-    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">GST (5%):</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(invoice.totalGst)}</td></tr>`;
+    const halfGst = invoice.totalGst / 2;
+    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">CGST-2.5%:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(halfGst)}</td></tr>`;
+    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">SGST-2.5%:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(halfGst)}</td></tr>`;
   }
   totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Grand Total:</td><td style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">${formatNum(invoice.totalAmount)}</td></tr>`;
 
