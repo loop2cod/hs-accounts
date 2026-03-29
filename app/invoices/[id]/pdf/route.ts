@@ -440,11 +440,21 @@ export async function GET(
   doc.text("Authorised Signatory", pageWidth - margin - 2, totY + 18, { align: "right" });
 
   const shopNameStr = (customer?.shopName || customer?.name || "Customer").replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
+  
+  const dateObj = typeof invoice.date === "string" ? new Date(invoice.date) : invoice.date;
+  const dateStr = dateObj.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).replace(/\//g, "-");
+  
+  const fileName = `invoice-${invoice.invoiceNumber}-${dateStr}-${shopNameStr}.pdf`;
+
   const buffer = Buffer.from(doc.output("arraybuffer"));
   return new Response(buffer, {
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="invoice-${invoice.invoiceNumber}-${shopNameStr}.pdf"`,
+      "Content-Disposition": `attachment; filename="${fileName}"`,
     },
   });
 }
