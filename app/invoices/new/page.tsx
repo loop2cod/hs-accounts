@@ -27,8 +27,7 @@ export default async function NewInvoicePage({
           <InvoiceForm
             customerId={customerId}
             customers={customers.map((c) => ({ 
-              _id: c._id, 
-              name: c.name, 
+              _id: c._id,
               shopName: c.shopName,
               address: c.address 
             }))}

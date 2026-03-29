@@ -23,7 +23,7 @@ function generatePrintHtml(
 ): string {
   const { numberToWords } = require("@/lib/numberToWords");
 
-  const custName = customer?.name || customer?.shopName || "—";
+  const custName = customer?.shopName || "—";
   const itemsHtml = invoice.lineItems.map((item: any, i: number) => `
     <tr>
       <td style="border:1px solid #ccc;padding:4px;text-align:center">${i + 1}</td>
@@ -105,7 +105,7 @@ function generatePrintHtml(
       <strong>NAME:</strong> ${custName}<br>
       <strong>ADDRESS:</strong> ${customer?.address || "—"}<br>
       ${invoice.withGst && customer?.gstNumber ? `<strong>GST IN:</strong> ${customer.gstNumber}<br>` : ""}
-      ${customer?.panNumber ? `<strong>PAN:</strong> ${customer.panNumber}<br>` : ""}
+      
       <strong>Phone:</strong> ${customer?.phone || "—"}
     </div>
     <div class="address">
@@ -260,12 +260,8 @@ export async function GET(
   y += 6;
   doc.setFont("helvetica", "normal");
   if (customer) {
-    doc.text(customer.name || customer.shopName || "—", margin, y);
+    doc.text(customer.shopName || "—", margin, y);
     y += 5;
-    if (customer.name) {
-      doc.text(customer.shopName, margin, y);
-      y += 5;
-    }
     if (customer.address) {
       const addrLines = doc.splitTextToSize(customer.address, contentWidth);
       doc.text(addrLines, margin, y);
@@ -275,10 +271,7 @@ export async function GET(
       doc.text(`GST: ${customer.gstNumber}`, margin, y);
       y += 5;
     }
-    if (customer.panNumber) {
-      doc.text(`PAN: ${customer.panNumber}`, margin, y);
-      y += 5;
-    }
+
     y += 4;
   } else {
     doc.text("—", margin, y);
@@ -439,7 +432,7 @@ export async function GET(
   doc.setFont("helvetica", "normal");
   doc.text("Authorised Signatory", pageWidth - margin - 2, totY + 18, { align: "right" });
 
-  const shopNameStr = (customer?.shopName || customer?.name || "Customer").replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
+  const shopNameStr = (customer?.shopName || "Customer").replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
   
   const dateObj = typeof invoice.date === "string" ? new Date(invoice.date) : invoice.date;
   const dateStr = dateObj.toLocaleDateString("en-IN", {

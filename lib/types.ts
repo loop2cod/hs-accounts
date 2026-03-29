@@ -4,14 +4,12 @@ export type RouteWeekday = 0 | 1 | 2 | 3 | 4 | 5 | 6; // Sun-Sat or use "monday"
 
 export interface Customer {
   _id?: ObjectId;
-  name: string;
   shopName: string;
   phone: string;
   address?: string;
   routeWeekday: RouteWeekday;
   routeOrder?: number;
   gstNumber?: string;
-  panNumber?: string;
   openingBalance?: number;
   deleted?: boolean;
   createdAt: Date;

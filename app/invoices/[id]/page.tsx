@@ -182,11 +182,11 @@ export default async function InvoiceViewPage({
             <CardContent className="space-y-4">
               <div className="flex items-start gap-4 p-3 bg-slate-50 rounded-xl">
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold shrink-0">
-                  {(customer?.name || customer?.shopName || "?").charAt(0).toUpperCase()}
+                  {(customer?.shopName || "?").charAt(0).toUpperCase()}
                 </div>
                 <div className="space-y-0.5">
-                  <p className="text-sm font-bold text-slate-900">{customer?.name || customer?.shopName || "-"}</p>
-                  <p className="text-xs text-slate-500 font-medium">{customer?.shopName}</p>
+                  <p className="text-sm font-bold text-slate-900">{customer?.shopName || "-"}</p>
+                  
                 </div>
               </div>
 
@@ -266,7 +266,7 @@ export default async function InvoiceViewPage({
 
         <div className="flex justify-between mb-4 text-sm">
           <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
-            <strong>NAME:</strong> {customer?.name || customer?.shopName || "—"}
+            <strong>NAME:</strong> {customer?.shopName || "—"}
             <br />
             <strong>ADDRESS:</strong> {customer?.address || "—"}
             <br />
@@ -276,19 +276,14 @@ export default async function InvoiceViewPage({
                 <br />
               </>
             )}
-            {customer?.panNumber && (
-              <>
-                <strong>PAN:</strong> {customer.panNumber}
-                <br />
-              </>
-            )}
+            
             <strong>Phone:</strong> {customer?.phone || "—"}
           </div>
 
           <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
             <strong>SHIPPING ADDRESS</strong>
             <br />
-            <strong>NAME:</strong> {customer?.name || customer?.shopName || "—"}
+            <strong>NAME:</strong> {customer?.shopName || "—"}
             <br />
             <strong>ADDRESS:</strong> {invoice.shippingAddress || customer?.address || "—"}
           </div>

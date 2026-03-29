@@ -74,7 +74,7 @@ export default async function PaymentsPage({
                   <PaymentListItem
                     key={p._id}
                     payment={p}
-                    customerName={(customerMap.get(p.customerId)?.name || customerMap.get(p.customerId)?.shopName) ?? "Unknown Customer"}
+                    customerName={customerMap.get(p.customerId)?.shopName ?? "Unknown Customer"}
                   />
                 ))}
               </div>

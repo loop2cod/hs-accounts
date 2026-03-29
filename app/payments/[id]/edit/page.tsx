@@ -39,7 +39,7 @@ export default async function EditPaymentPage({
       </div>
       <Card>
         <CardHeader className="font-medium">
-          Payment for {customer?.name || customer?.shopName || "Unknown"}
+          Payment for {customer?.shopName || "Unknown"}
         </CardHeader>
         <CardContent>
           <PaymentForm

@@ -14,7 +14,7 @@ export async function getCustomers(filters?: { routeWeekday?: RouteWeekday; incl
   const list = await db
     .collection<Customer>("customers")
     .find(query)
-    .sort({ routeWeekday: 1, routeOrder: 1, name: 1 })
+    .sort({ routeWeekday: 1, routeOrder: 1, shopName: 1 })
     .toArray();
   return list.map((c) => ({
     ...c,
@@ -150,12 +150,11 @@ function parseRouteWeekday(v: string): RouteWeekday {
 }
 
 export async function createCustomerFromForm(state: any, formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  const shopName = String(formData.get("shopName") ?? "").trim();
+    const shopName = String(formData.get("shopName") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
 
-  if (!name || !shopName || !phone) {
-    return { error: "Name, shop name, and phone are required." };
+  if (!shopName || !phone) {
+    return { error: "Shop name and phone are required." };
   }
 
   const db = await getDb();
@@ -170,23 +169,20 @@ export async function createCustomerFromForm(state: any, formData: FormData) {
       ? parseInt(String(routeOrderRaw), 10)
       : undefined;
   const result = await createCustomer({
-    name,
     shopName,
     phone,
     address: String(formData.get("address") ?? "").trim() || undefined,
     routeWeekday: parseRouteWeekday(String(formData.get("routeWeekday") ?? "1")),
     routeOrder: Number.isInteger(routeOrder) ? routeOrder : undefined,
     gstNumber: String(formData.get("gstNumber") ?? "").trim() || undefined,
-    panNumber: String(formData.get("panNumber") ?? "").trim() || undefined,
-    openingBalance: parseFloat(String(formData.get("openingBalance") ?? "0")) || 0,
+        openingBalance: parseFloat(String(formData.get("openingBalance") ?? "0")) || 0,
   });
   if (result._id) redirect(`/customers/${result._id}`);
   return result;
 }
 
 export async function updateCustomerFromForm(id: string, state: any, formData: FormData) {
-  const name = String(formData.get("name") ?? "").trim();
-  const shopName = String(formData.get("shopName") ?? "").trim();
+    const shopName = String(formData.get("shopName") ?? "").trim();
   const phone = String(formData.get("phone") ?? "").trim();
 
   if (!shopName || !phone) {
@@ -214,15 +210,13 @@ export async function updateCustomerFromForm(id: string, state: any, formData: F
       ? parseInt(String(routeOrderRaw), 10)
       : undefined;
   await updateCustomer(id, {
-    name: name || undefined,
-    shopName,
+        shopName,
     phone,
     address: String(formData.get("address") ?? "").trim() || undefined,
     routeWeekday: parseRouteWeekday(String(formData.get("routeWeekday") ?? "1")),
     routeOrder: Number.isInteger(routeOrder) ? routeOrder : undefined,
     gstNumber: String(formData.get("gstNumber") ?? "").trim() || undefined,
-    panNumber: String(formData.get("panNumber") ?? "").trim() || undefined,
-    openingBalance: parseFloat(String(formData.get("openingBalance") ?? "0")) || 0,
+        openingBalance: parseFloat(String(formData.get("openingBalance") ?? "0")) || 0,
   });
   redirect(`/customers/${id}`);
 }

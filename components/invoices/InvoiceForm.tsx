@@ -9,7 +9,7 @@ import type { LineItem, Invoice } from "@/lib/types";
 interface InvoiceFormProps {
   invoice?: Invoice | null;
   customerId?: string;
-  customers: { _id: string; name: string; shopName: string; address?: string }[];
+  customers: { _id: string; shopName: string; address?: string }[];
   action: (formData: FormData) => Promise<unknown>;
 }
 
@@ -164,7 +164,7 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
               <option value="">Select a customer</option>
               {customers.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name || c.shopName} – {c.shopName}
+                  {c.shopName}
                 </option>
               ))}
             </Select>

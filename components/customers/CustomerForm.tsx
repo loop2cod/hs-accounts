@@ -52,14 +52,7 @@ export function CustomerForm({ customer, action }: CustomerFormProps) {
           placeholder="Phone"
         />
       </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">Name</label>
-        <Input
-          name="name"
-          defaultValue={customer?.name}
-          placeholder="Customer name"
-        />
-      </div>
+      
       <div>
         <label className="mb-1 block text-sm font-medium">Address</label>
         <Input
@@ -100,14 +93,7 @@ export function CustomerForm({ customer, action }: CustomerFormProps) {
           placeholder="GST Number"
         />
       </div>
-      <div>
-        <label className="mb-1 block text-sm font-medium">PAN Number (Optional)</label>
-        <Input
-          name="panNumber"
-          defaultValue={customer?.panNumber ?? ""}
-          placeholder="PAN Number"
-        />
-      </div>
+      
       <div>
         <label className="mb-1 block text-sm font-medium">Opening Balance / Pending Due</label>
         <Input

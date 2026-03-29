@@ -41,8 +41,7 @@ export default async function EditInvoicePage({
             invoice={invoice as any}
             customers={customers.map((c) => ({
               _id: c._id as string,
-              name: c.name,
-              shopName: c.shopName,
+                            shopName: c.shopName,
               address: c.address,
             }))}
             action={updateAction}

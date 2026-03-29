@@ -46,7 +46,7 @@ export async function getDueBalanceReport(weekdayFilter?: number): Promise<DueBa
     const paid = payAgg[0]?.total ?? 0;
     rows.push({
       customerId: oid.toString(),
-      customerName: c.name,
+      customerName: c.shopName,
       shopName: c.shopName,
       routeWeekday: c.routeWeekday,
       openingBalance,

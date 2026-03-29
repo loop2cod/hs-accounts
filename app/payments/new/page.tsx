@@ -42,8 +42,7 @@ export default async function NewPaymentPage({
                         customerId={customerId}
                         customers={customers.map((c) => ({
                             _id: c._id,
-                            name: c.name,
-                            shopName: c.shopName,
+                                                        shopName: c.shopName,
                         }))}
                         action={createPaymentFromForm}
                     />

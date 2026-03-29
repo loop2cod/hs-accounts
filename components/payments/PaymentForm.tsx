@@ -51,7 +51,7 @@ export function PaymentForm({ customerId, customers, action, defaultValues, subm
               <option value="">Select customer</option>
               {customers.map((c) => (
                 <option key={c._id} value={c._id}>
-                  {c.name || c.shopName} – {c.shopName}
+                  {c.shopName} – {c.shopName}
                 </option>
               ))}
             </Select>
