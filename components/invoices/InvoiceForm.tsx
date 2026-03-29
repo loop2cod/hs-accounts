@@ -57,6 +57,12 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
           item.amount = q * u;
         }
         next[index] = item;
+        // Auto-add new row if the user types in the last row
+        if (index === next.length - 1) {
+          if (value !== "" && value !== 0 && !Number.isNaN(value)) {
+            next.push({ ...defaultLineItem });
+          }
+        }
         return next;
       });
     },
@@ -104,7 +110,10 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
     setError(null);
     const form = e.currentTarget;
     const fd = new FormData(form);
-    fd.set("lineItems", JSON.stringify(lineItems));
+    // Filter out completely empty rows
+    const validLineItems = lineItems.filter(item => (item.description && item.description.trim() !== "") || item.quantity > 0 || item.unitPrice > 0);
+    if (validLineItems.length === 0) { setError("Please add at least one valid line item."); return; }
+    fd.set("lineItems", JSON.stringify(validLineItems));
     fd.set("withGst", withGst ? "true" : "false");
     const result = await action(fd);
     if (result && typeof result === "object" && "error" in result && result.error) {
@@ -197,134 +206,72 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
         </div>
       </div>
 
-        <div className="space-y-4 pt-2">
-          <div className="flex items-center justify-between px-1">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Line Items</label>
-            <Button type="button" variant="outline" size="sm" onClick={addRow} className="h-7 rounded-lg text-[10px] font-bold uppercase tracking-wider px-3">
-              Add Row
-            </Button>
+      <div className="space-y-4 pt-2">
+        <div className="flex items-center justify-between px-1">
+          <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Line Items</label>
+          <Button type="button" variant="outline" size="sm" onClick={addRow} className="h-7 rounded-lg text-[10px] font-bold uppercase tracking-wider px-3">
+            Add Row
+          </Button>
+        </div>
+
+        <div className="border border-slate-100 rounded-xl overflow-hidden">
+          {/* Desktop header */}
+          <div className="hidden md:grid md:grid-cols-12 bg-slate-50/80 border-b border-slate-100 px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <div className="col-span-3 flex items-center">Description</div>
+            <div className="col-span-2 flex items-center">HSN</div>
+            <div className="col-span-3 flex items-center">Narration</div>
+            <div className="col-span-2 flex items-center justify-end">Qty</div>
+            <div className="col-span-2 flex items-center justify-end">Rate</div>
           </div>
 
-          <div className="border border-slate-100 rounded-xl overflow-hidden">
-            {/* Desktop header */}
-            <div className="hidden md:grid md:grid-cols-12 bg-slate-50/80 border-b border-slate-100 px-4 py-3 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-              <div className="col-span-3 flex items-center">Description</div>
-              <div className="col-span-2 flex items-center">HSN</div>
-              <div className="col-span-3 flex items-center">Narration</div>
-              <div className="col-span-2 flex items-center justify-end">Qty</div>
-              <div className="col-span-2 flex items-center justify-end">Rate</div>
-            </div>
-
-            <div className="divide-y divide-slate-100">
-              {lineItems.map((item, i) => (
-                <div
-                  key={i}
-                  ref={(el) => {
-                    rowRefs.current[i] = el as any;
-                  }}
-                  className="relative group bg-white hover:bg-slate-50/30 transition-colors"
-                >
-                  {/* Mobile View */}
-                  <div className="md:hidden space-y-3 p-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Description</label>
-                      <Input
-                        className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-sm"
-                        value={item.description}
-                        onChange={(e) => updateLineItem(i, "description", e.target.value)}
-                        placeholder="Item name..."
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">HSN Code</label>
-                        <Input
-                          className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-sm uppercase"
-                          value={item.hsnSac ?? ""}
-                          onChange={(e) => updateLineItem(i, "hsnSac", e.target.value)}
-                          placeholder="HSN"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Narration</label>
-                        <Input
-                          className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-sm"
-                          value={item.narration ?? ""}
-                          onChange={(e) => updateLineItem(i, "narration", e.target.value)}
-                          placeholder="Narration..."
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Qty</label>
-                        <Input
-                          type="number"
-                          className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-right text-sm"
-                          value={item.quantity || ""}
-                          onChange={(e) =>
-                            updateLineItem(i, "quantity", parseFloat(e.target.value) || 0)
-                          }
-                          onKeyDown={(e) => handleKeyDown(e, i, "qty")}
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rate</label>
-                        <Input
-                          type="number"
-                          className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-right text-sm"
-                          value={item.unitPrice || ""}
-                          onChange={(e) =>
-                            updateLineItem(i, "unitPrice", parseFloat(e.target.value) || 0)
-                          }
-                          onKeyDown={(e) => handleKeyDown(e, i, "rate")}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-100">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subtotal</label>
-                      <span className="font-bold text-slate-900 tabular-nums">
-                        {(item.quantity * item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      </span>
-                    </div>
+          <div className="divide-y divide-slate-100">
+            {lineItems.map((item, i) => (
+              <div
+                key={i}
+                ref={(el) => {
+                  rowRefs.current[i] = el as any;
+                }}
+                className="relative group bg-white hover:bg-slate-50/30 transition-colors"
+              >
+                {/* Mobile View */}
+                <div className="md:hidden space-y-3 p-4">
+                  <div>
+                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Description</label>
+                    <Input
+                      className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-sm"
+                      value={item.description}
+                      onChange={(e) => updateLineItem(i, "description", e.target.value)}
+                      placeholder="Item name..."
+                    />
                   </div>
 
-                  {/* Desktop View */}
-                  <div className="hidden md:grid md:grid-cols-12 md:items-center md:p-4">
-                    <div className="col-span-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">HSN Code</label>
                       <Input
-                        className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 text-sm"
-                        value={item.description}
-                        onChange={(e) => updateLineItem(i, "description", e.target.value)}
-                        placeholder="Item name..."
-                      />
-                    </div>
-
-                    <div className="col-span-2">
-                      <Input
-                        className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 uppercase text-sm"
+                        className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-sm uppercase"
                         value={item.hsnSac ?? ""}
                         onChange={(e) => updateLineItem(i, "hsnSac", e.target.value)}
                         placeholder="HSN"
                       />
                     </div>
-
-                    <div className="col-span-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Narration</label>
                       <Input
-                        className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 text-sm"
+                        className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-sm"
                         value={item.narration ?? ""}
                         onChange={(e) => updateLineItem(i, "narration", e.target.value)}
                         placeholder="Narration..."
                       />
                     </div>
+                  </div>
 
-                    <div className="col-span-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Qty</label>
                       <Input
                         type="number"
-                        className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 text-right text-sm"
+                        className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-right text-sm"
                         value={item.quantity || ""}
                         onChange={(e) =>
                           updateLineItem(i, "quantity", parseFloat(e.target.value) || 0)
@@ -332,11 +279,11 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
                         onKeyDown={(e) => handleKeyDown(e, i, "qty")}
                       />
                     </div>
-
-                    <div className="col-span-2">
+                    <div>
+                      <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Rate</label>
                       <Input
                         type="number"
-                        className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 text-right text-sm"
+                        className="border-slate-200/60 bg-slate-50/30 focus:bg-white h-9 px-3 text-right text-sm"
                         value={item.unitPrice || ""}
                         onChange={(e) =>
                           updateLineItem(i, "unitPrice", parseFloat(e.target.value) || 0)
@@ -346,27 +293,89 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
                     </div>
                   </div>
 
-                  <div className="hidden md:flex md:items-center md:justify-end md:px-4 md:py-3 md:border-t md:border-slate-100">
+                  <div className="flex items-center justify-between pt-2 border-t border-slate-100">
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subtotal</label>
                     <span className="font-bold text-slate-900 tabular-nums">
                       {(item.quantity * item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </span>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => removeRow(i)}
-                    className="absolute top-2 right-2 md:static md:top-auto md:right-auto md:w-7 md:h-7 md:flex md:items-center md:justify-center md:rounded-full bg-red-50 text-red-500 border border-red-100 md:border-0 md:bg-transparent md:text-slate-300 md:hover:text-red-500 md:hover:bg-red-50 md:transition-all md:opacity-0 md:group-hover:opacity-100"
-                    title="Delete item"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
                 </div>
-              ))}
-            </div>
+
+                {/* Desktop View */}
+                <div className="hidden md:grid md:grid-cols-12 md:items-center md:p-4">
+                  <div className="col-span-3">
+                    <Input
+                      className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 text-sm"
+                      value={item.description}
+                      onChange={(e) => updateLineItem(i, "description", e.target.value)}
+                      placeholder="Item name..."
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Input
+                      className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 uppercase text-sm"
+                      value={item.hsnSac ?? ""}
+                      onChange={(e) => updateLineItem(i, "hsnSac", e.target.value)}
+                      placeholder="HSN"
+                    />
+                  </div>
+
+                  <div className="col-span-3">
+                    <Input
+                      className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 text-sm"
+                      value={item.narration ?? ""}
+                      onChange={(e) => updateLineItem(i, "narration", e.target.value)}
+                      placeholder="Narration..."
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Input
+                      type="number"
+                      className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 text-right text-sm"
+                      value={item.quantity || ""}
+                      onChange={(e) =>
+                        updateLineItem(i, "quantity", parseFloat(e.target.value) || 0)
+                      }
+                      onKeyDown={(e) => handleKeyDown(e, i, "qty")}
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <Input
+                      type="number"
+                      className="border-slate-200/60 bg-transparent focus:bg-white focus:border-slate-200 h-9 px-2 text-right text-sm"
+                      value={item.unitPrice || ""}
+                      onChange={(e) =>
+                        updateLineItem(i, "unitPrice", parseFloat(e.target.value) || 0)
+                      }
+                      onKeyDown={(e) => handleKeyDown(e, i, "rate")}
+                    />
+                  </div>
+                </div>
+
+                <div className="hidden md:flex md:items-center md:justify-end md:px-4 md:py-3 md:border-t md:border-slate-100">
+                  <span className="font-bold text-slate-900 tabular-nums">
+                    {(item.quantity * item.unitPrice).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => removeRow(i)}
+                  className="absolute top-2 right-2 md:static md:top-auto md:right-auto md:w-7 md:h-7 md:flex md:items-center md:justify-center md:rounded-full bg-red-50 text-red-500 border border-red-100 md:border-0 md:bg-transparent md:text-slate-300 md:hover:text-red-500 md:hover:bg-red-50 md:transition-all md:opacity-0 md:group-hover:opacity-100"
+                  title="Delete item"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
           </div>
         </div>
+      </div>
 
       <div className="flex flex-col-reverse md:flex-row md:items-center justify-between gap-6 pt-4 border-t border-slate-200/60">
         <div className="hidden md:flex items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-slate-50/50 px-4 py-2 rounded-lg">
