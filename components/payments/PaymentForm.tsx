@@ -22,7 +22,7 @@ interface PaymentFormProps {
 }
 
 export function PaymentForm({ customerId, customers, action, defaultValues, submitLabel }: PaymentFormProps) {
-  const [state, formAction] = useActionState(
+  const [state, formAction, pending] = useActionState(
     async (state: { error?: string } | null, formData: FormData) => action(formData),
     null as { error?: string } | null
   );
@@ -124,8 +124,8 @@ export function PaymentForm({ customerId, customers, action, defaultValues, subm
       </div>
 
       <div className="pt-2">
-        <Button type="submit" className="w-full h-11 shadow-lg shadow-primary/20 font-bold tracking-wide">
-          {submitLabel ?? "Record Payment"}
+        <Button type="submit" disabled={pending} className="w-full h-11 shadow-lg shadow-primary/20 font-bold tracking-wide">
+          {pending ? "Processing..." : (submitLabel ?? "Record Payment")}
         </Button>
       </div>
     </form>

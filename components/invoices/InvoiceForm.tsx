@@ -31,6 +31,7 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
   );
   const [error, setError] = useState<string | null>(null);
   const [isCustomerEditOpen, setIsCustomerEditOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Find initial shipping address if customer is pre-selected for a new invoice
   const getInitialAddress = () => {
@@ -107,6 +108,8 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     setError(null);
     const form = e.currentTarget;
     const fd = new FormData(form);
@@ -118,6 +121,7 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
     const result = await action(fd);
     if (result && typeof result === "object" && "error" in result && result.error) {
       setError(String(result.error));
+      setIsSubmitting(false);
     }
   }
 
@@ -396,8 +400,8 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
               />
             </div>
           </div>
-          <Button type="submit" size="md" className="h-10 px-8 shadow-lg shadow-primary/20 font-bold tracking-wide">
-            {invoice ? "Update Invoice" : "Save Invoice"}
+          <Button type="submit" disabled={isSubmitting} size="md" className="h-10 px-8 shadow-lg shadow-primary/20 font-bold tracking-wide">
+            {isSubmitting ? "Saving..." : invoice ? "Update Invoice" : "Save Invoice"}
           </Button>
         </div>
       </div>
