@@ -16,9 +16,8 @@ export async function GET(request: NextRequest) {
     case "customers": {
       const list = await getCustomers();
       data = [
-        ["Name", "Shop", "Phone", "Address", "Route weekday", "Route order"],
+        ["Shop", "Phone", "Address", "Route weekday", "Route order"],
         ...list.map((c) => [
-          c.name,
           c.shopName,
           c.phone,
           c.address ?? "",

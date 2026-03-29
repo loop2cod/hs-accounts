@@ -9,7 +9,7 @@ const PAYMENT_MODES = ["Cash", "UPI", "Bank transfer", "Card", "Other"];
 
 interface PaymentFormProps {
   customerId?: string;
-  customers: { _id: string; name: string; shopName: string }[];
+  customers: { _id: string; shopName: string }[];
   action: (formData: FormData) => Promise<{ error?: string }>;
   defaultValues?: {
     amount: number;

@@ -44,7 +44,7 @@ export async function getInvoicesByCustomer(customerId: string) {
     .find({ customerId: oid, deleted: { $ne: true } })
     .project({ lineItems: 0 })
     .sort({ date: -1, createdAt: -1 })
-    .toArray();
+    .toArray() as Invoice[];
   return list.map((inv) => ({
     ...inv,
     _id: inv._id!.toString(),
@@ -85,7 +85,7 @@ export async function getInvoices(filters?: {
     cursor.skip(skip).limit(limit);
   }
 
-  const list = await cursor.toArray();
+  const list = (await cursor.toArray()) as Invoice[];
 
   return {
     invoices: list.map((inv) => ({
