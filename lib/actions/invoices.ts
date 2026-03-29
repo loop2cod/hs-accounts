@@ -42,6 +42,7 @@ export async function getInvoicesByCustomer(customerId: string) {
   const list = await db
     .collection<Invoice>("invoices")
     .find({ customerId: oid, deleted: { $ne: true } })
+    .project({ lineItems: 0 })
     .sort({ date: -1, createdAt: -1 })
     .toArray();
   return list.map((inv) => ({
@@ -78,7 +79,7 @@ export async function getInvoices(filters?: {
   const col = db.collection<Invoice>("invoices");
   const total = await col.countDocuments(query);
 
-  const cursor = col.find(query).sort({ date: -1, createdAt: -1 });
+  const cursor = col.find(query).project({ lineItems: 0 }).sort({ date: -1, createdAt: -1 });
 
   if (filters?.limit !== 0) {
     cursor.skip(skip).limit(limit);
