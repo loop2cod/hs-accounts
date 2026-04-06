@@ -148,7 +148,7 @@ export default async function InvoiceViewPage({
                   {invoice.freight != null && invoice.freight > 0 && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500 font-medium">Freight</span>
-                      <span className="font-semibold text-slate-900 tabular-nums">+{formatCurrency(invoice.freight)}</span>
+                      <span className="font-semibold text-slate-900 tabular-nums">{formatCurrency(invoice.freight)}</span>
                     </div>
                   )}
                   {invoice.withGst && invoice.totalGst != null && (
@@ -230,95 +230,92 @@ export default async function InvoiceViewPage({
 
       {/* Invoice Document - PRINT ONLY TEMPLATE */}
       <div className="invoice-doc invoice-print-template mx-auto max-w-none px-0 py-0 bg-white hidden print:block">
-        <div className="inv-header">
-          <div className="inv-header-left flex gap-4 items-center">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-14 h-14 bg-red-600 flex items-center justify-center text-white text-2xl font-bold rounded">HS</div>
-                <div>
-                  <div className="text-3xl font-bold text-red-600 tracking-wider">HAJASS</div>
-                  <div className="text-sm font-bold text-red-600 tracking-[0.3em]">TRADERS</div>
+        <div className="invoice-print-content">
+          <div className="inv-header mb-4">
+            <div className="flex justify-between items-start mb-3">
+              <div className="flex-1">
+                {invoice.withGst && (
+                  <div className="text-[10px] text-gray-600 leading-tight">
+                    <div>GSTIN: 32BECPH7018J1ZR</div>
+                    <div>State Code: 32</div>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-center">
+                <img src="/logo" alt="Logo" className="w-24 h-24 object-contain" />
+              </div>
+              <div className="flex-1 text-right">
+                <div className="text-xl font-bold mb-2">
+                  {invoice.withGst ? "TAX INVOICE" : "INVOICE"}
+                </div>
+                <div className="text-xs">
+                  <div><strong>Invoice No.:</strong> {invoice.invoiceNumber}</div>
+                  <div><strong>Date:</strong> {formatDate(invoice.date)}</div>
                 </div>
               </div>
-              <div className="text-xs text-gray-600 leading-relaxed border-l border-gray-300 pl-4">
-                {invoice.withGst && <div>GSTIN: 32BECPH7018J1ZR</div>}
-                <div>18/883 Pakker HajiComplex, Gandhi Park,</div>
-                <div>Payyannur, Kannur</div>
-                <div>Mob: 8078267673</div>
-              </div>
             </div>
-          </div>
-          <div className="inv-meta">
-            <div className="inv-title">
-              {invoice.withGst ? "TAX INVOICE" : "INVOICE"}
+            <div className="text-center text-xs text-gray-600 leading-relaxed">
+              <div>18/883 Pakker HajiComplex, Gandhi Park, Payyannur, Kannur</div>
+              <div>Mob: 8078267673</div>
             </div>
-            <div>
-              <strong>Invoice No.:</strong> {invoice.invoiceNumber}
-            </div>
-            <div>
-              <strong>Date:</strong> {formatDate(invoice.date)}
-            </div>
-            <div>
-              <strong>Due Date:</strong> {formatDate(invoice.date)}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-between mb-4 text-sm">
-          <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
-            <strong>NAME:</strong> {customer?.shopName || "—"}
-            <br />
-            <strong>ADDRESS:</strong> {customer?.address || "—"}
-            <br />
-            {invoice.withGst && customer?.gstNumber && (
-              <>
-                <strong>GST IN:</strong> {customer.gstNumber}
-                <br />
-              </>
-            )}
-            
-            <strong>Phone:</strong> {customer?.phone || "—"}
           </div>
 
-          <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
-            <strong>SHIPPING ADDRESS</strong>
-            <br />
-            <strong>NAME:</strong> {customer?.shopName || "—"}
-            <br />
-            <strong>ADDRESS:</strong> {invoice.shippingAddress || customer?.address || "—"}
-          </div>
-        </div>
+          <div className="flex justify-between mb-4 text-sm">
+            <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
+              NAME: <strong>{customer?.shopName || "—"}</strong>
+              <br />
+              ADDRESS: <strong>{customer?.address || "—"}</strong>
+              <br />
+              {invoice.withGst && (
+                <>
+                  GST IN: <strong>{customer?.gstNumber || "—"}</strong>
+                  <br />
+                </>
+              )}
+              Phone: <strong>{customer?.phone || "—"}</strong>
+            </div>
 
-        <table className="w-full border-collapse border border-neutral-300 text-sm mb-4">
-          <thead className="bg-neutral-100">
-            <tr>
-              <th className="border border-neutral-300 p-1 w-8 text-center">#</th>
-              <th className="border border-neutral-300 p-1 text-left">Commodity / Item</th>
-              {invoice.withGst && <th className="border border-neutral-300 p-1 w-24 text-left">HSN/SAC</th>}
-              <th className="border border-neutral-300 p-1 text-left">Narration</th>
-              <th className="border border-neutral-300 p-1 w-24 text-right">Unit Price</th>
-              <th className="border border-neutral-300 p-1 w-16 text-right">Qty</th>
-              <th className="border border-neutral-300 p-1 w-28 text-right">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.lineItems.map((item, i) => (
-              <tr key={i}>
-                <td className="border border-neutral-300 p-1 text-center">{i + 1}</td>
-                <td className="border border-neutral-300 p-1">{item.description}</td>
-                {invoice.withGst && <td className="border border-neutral-300 p-1">{item.hsnSac || ""}</td>}
-                <td className="border border-neutral-300 p-1">{item.narration || ""}</td>
-                <td className="border border-neutral-300 p-1 text-right">{formatCurrency(item.unitPrice)}</td>
-                <td className="border border-neutral-300 p-1 text-right">{item.quantity}</td>
-                <td className="border border-neutral-300 p-1 text-right">
-                  {formatCurrency(item.amount)}
-                </td>
+            <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
+              <strong>SHIPPING ADDRESS</strong>
+              <br />
+              NAME: <strong>{customer?.shopName || "—"}</strong>
+              <br />
+              ADDRESS: <strong>{invoice.shippingAddress || customer?.address || "—"}</strong>
+            </div>
+          </div>
+
+          <table className="w-full border-collapse border border-neutral-300 text-sm mb-4">
+            <thead className="bg-neutral-100">
+              <tr>
+                <th className="border border-neutral-300 p-1 w-8 text-center">#</th>
+                <th className="border border-neutral-300 p-1 text-left">Commodity / Item</th>
+                {invoice.withGst && <th className="border border-neutral-300 p-1 w-20 text-left">HSN/SAC</th>}
+                <th className="border border-neutral-300 p-1 w-32 text-left">Narration</th>
+                <th className="border border-neutral-300 p-1 w-24 text-right">Unit Price</th>
+                <th className="border border-neutral-300 p-1 w-16 text-right">Qty</th>
+                <th className="border border-neutral-300 p-1 w-28 text-right">Amount</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {invoice.lineItems.map((item, i) => (
+                <tr key={i}>
+                  <td className="border border-neutral-300 p-1 text-center">{i + 1}</td>
+                  <td className="border border-neutral-300 p-1">{item.description}</td>
+                  {invoice.withGst && <td className="border border-neutral-300 p-1">{item.hsnSac || ""}</td>}
+                  <td className="border border-neutral-300 p-1">{item.narration || ""}</td>
+                  <td className="border border-neutral-300 p-1 text-right">{formatCurrency(item.unitPrice)}</td>
+                  <td className="border border-neutral-300 p-1 text-right">{item.quantity}</td>
+                  <td className="border border-neutral-300 p-1 text-right">
+                    {formatCurrency(item.amount)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-        <div className="flex text-sm border border-neutral-300 mb-4">
+        <div className="invoice-print-footer">
+          <div className="flex text-sm border border-neutral-300 mb-4">
           <div className="p-2 w-3/4 border-r border-neutral-300 flex flex-col justify-between">
             <div>
               <strong>Grand Total in words:</strong>
@@ -380,13 +377,14 @@ export default async function InvoiceViewPage({
           </div>
         </div>
 
-        <div className="text-xs border border-neutral-300 p-2 flex justify-between">
-          <div>
-            <strong>DECLARATION:</strong> Certified that all the particulars shown in the above invoice are true and correct.
-          </div>
-          <div className="text-right flex flex-col items-end">
-            <span className="mb-8">for <strong>HAJASS TRADERS</strong></span>
-            <span>Authorised Signatory</span>
+          <div className="text-xs border border-neutral-300 p-2 flex justify-between">
+            <div>
+              <strong>DECLARATION:</strong> Certified that all the particulars shown in the above invoice are true and correct.
+            </div>
+            <div className="text-right flex flex-col items-end">
+              <span className="mb-8">for <strong>HAJASS TRADERS</strong></span>
+              <span>Authorised Signatory</span>
+            </div>
           </div>
         </div>
       </div >

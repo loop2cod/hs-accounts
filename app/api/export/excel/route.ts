@@ -6,6 +6,7 @@ import { getPayments } from "@/lib/actions/payments";
 import { getDueBalanceReport } from "@/lib/actions/reports";
 import { getLedgerReport } from "@/lib/actions/reports";
 import { formatDate } from "@/lib/utils";
+import type { Invoice } from "@/lib/types";
 
 export async function GET(request: NextRequest) {
   const type = request.nextUrl.searchParams.get("type") ?? "";
@@ -35,7 +36,7 @@ export async function GET(request: NextRequest) {
       const { invoices: list } = await getInvoices({ withGst, limit: 0 });
       data = [
         ["Invoice #", "Date", "Total", "With GST"],
-        ...list.map((inv) => [
+        ...list.map((inv: Invoice) => [
           inv.invoiceNumber,
           formatDate(inv.date),
           inv.totalAmount,

@@ -6,16 +6,18 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Pagination } from "@/components/ui/Pagination";
 import { FileText, Plus, Download, ChevronRight, Calendar, BadgeCheck, Package } from "lucide-react";
+import { InvoiceSearchBar } from "@/components/invoices/InvoiceSearchBar";
 
 export default async function InvoicesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; customerId?: string; page?: string }>;
+  searchParams: Promise<{ filter?: string; customerId?: string; page?: string; search?: string }>;
 }) {
   const params = await searchParams;
   const filter = params.filter; // "all" | "gst" | "nogst"
   const page = parseInt(params.page ?? "1", 10);
   const limit = 10;
+  const search = params.search;
 
   const withGstFilter =
     filter === "gst" ? true : filter === "nogst" ? false : undefined;
@@ -23,11 +25,12 @@ export default async function InvoicesPage({
   const { invoices, totalPages } = await getInvoices({
     withGst: withGstFilter,
     customerId: params.customerId,
+    search,
     page,
     limit,
   });
 
-  const baseUrl = `/invoices${filter ? `?filter=${filter}` : ""}${params.customerId ? `${filter ? "&" : "?"}customerId=${params.customerId}` : ""}`;
+  const baseUrl = `/invoices${filter ? `?filter=${filter}` : ""}${params.customerId ? `${filter ? "&" : "?"}customerId=${params.customerId}` : ""}${search ? `${filter || params.customerId ? "&" : "?"}search=${encodeURIComponent(search)}` : ""}`;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
@@ -54,6 +57,8 @@ export default async function InvoicesPage({
           </Link>
         </div>
       </header>
+
+      <InvoiceSearchBar initialSearch={search} filter={filter} customerId={params.customerId} />
 
       <Card className="border-none shadow-sm bg-white/50 backdrop-blur-sm p-0">
         <CardContent className="flex flex-wrap gap-2 p-0">

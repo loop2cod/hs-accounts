@@ -55,12 +55,88 @@ export async function getInvoicesByCustomer(customerId: string) {
 export async function getInvoices(filters?: {
   withGst?: boolean;
   customerId?: string;
+  search?: string;
   page?: number;
   limit?: number;
   includeDeleted?: boolean;
 }) {
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
+  const page = filters?.page ?? 1;
+  const limit = filters?.limit ?? 10;
+  const skip = (page - 1) * limit;
+
+  // If search is provided, use aggregation pipeline to search across invoice and customer
+  if (filters?.search && filters.search.trim()) {
+    const searchTerm = filters.search.trim();
+    const searchRegex = { $regex: searchTerm, $options: "i" };
+
+    const matchStage: Record<string, unknown> = {};
+    if (filters?.withGst !== undefined) matchStage.withGst = filters.withGst;
+    if (filters?.customerId) {
+      try {
+        matchStage.customerId = new ObjectId(filters.customerId);
+      } catch {
+        // ignore invalid id
+      }
+    }
+    if (!filters?.includeDeleted) matchStage.deleted = { $ne: true };
+
+    const pipeline: any[] = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: "customers",
+          localField: "customerId",
+          foreignField: "_id",
+          as: "customer"
+        }
+      },
+      { $unwind: { path: "$customer", preserveNullAndEmptyArrays: true } },
+      {
+        $match: {
+          $or: [
+            { invoiceNumber: searchRegex },
+            { "customer.shopName": searchRegex }
+          ]
+        }
+      },
+      { $sort: { date: -1, createdAt: -1 } },
+      {
+        $facet: {
+          metadata: [{ $count: "total" }],
+          data: [
+            { $skip: filters?.limit === 0 ? 0 : skip },
+            ...(filters?.limit === 0 ? [] : [{ $limit: limit }]),
+            {
+              $project: {
+                lineItems: 0,
+                customer: 0
+              }
+            }
+          ]
+        }
+      }
+    ];
+
+    const result = await db.collection<Invoice>("invoices").aggregate(pipeline).toArray();
+    const total = result[0]?.metadata[0]?.total ?? 0;
+    const list = result[0]?.data ?? [];
+
+    return {
+      invoices: list.map((inv: any) => ({
+        ...inv,
+        _id: inv._id!.toString(),
+        customerId: inv.customerId.toString(),
+      })),
+      total,
+      page,
+      limit: filters?.limit === 0 ? total : limit,
+      totalPages: filters?.limit === 0 ? 1 : Math.ceil(total / limit),
+    };
+  }
+
+  // Regular query without search
   const query: Record<string, unknown> = {};
   if (filters?.withGst !== undefined) query.withGst = filters.withGst;
   if (filters?.customerId) {
@@ -71,10 +147,6 @@ export async function getInvoices(filters?: {
     }
   }
   if (!filters?.includeDeleted) query.deleted = { $ne: true };
-
-  const page = filters?.page ?? 1;
-  const limit = filters?.limit ?? 10;
-  const skip = (page - 1) * limit;
 
   const col = db.collection<Invoice>("invoices");
   const total = await col.countDocuments(query);
@@ -141,12 +213,6 @@ export async function createInvoice(data: {
   let subtotal = 0;
   const lineItems: LineItem[] = data.lineItems.map((item) => {
     const amount = item.quantity * item.unitPrice;
-    let gstAmount = 0;
-    let totalRow = amount;
-    if (data.withGst) {
-      gstAmount = Math.round((amount * 5) / 100);
-      totalRow = amount + gstAmount;
-    }
     subtotal += amount;
     return {
       description: item.description,
@@ -155,12 +221,26 @@ export async function createInvoice(data: {
       amount,
       hsnSac: item.hsnSac,
       narration: item.narration,
-      ...(data.withGst && { gstRate: 5, gstAmount, totalRow }),
     };
   });
+
+  // Calculate GST on total subtotal (not per line item)
   const totalGst = data.withGst
-    ? lineItems.reduce((s, i) => s + (i.gstAmount ?? 0), 0)
+    ? Math.round((subtotal * 5) / 100)
     : undefined;
+
+  // Add gstAmount and totalRow to line items after totalGst is calculated
+  const lineItemsWithGst = data.withGst
+    ? lineItems.map((item) => {
+        const gstAmount = Math.round((item.amount * 5) / 100);
+        return {
+          ...item,
+          gstRate: 5,
+          gstAmount,
+          totalRow: item.amount + gstAmount,
+        };
+      })
+    : lineItems;
 
   const freightAmount = data.freight ?? 0;
   const taxableAmount = subtotal + freightAmount;
@@ -172,7 +252,7 @@ export async function createInvoice(data: {
     invoiceNumber,
     date: data.date,
     shippingAddress: data.shippingAddress,
-    lineItems,
+    lineItems: lineItemsWithGst,
     subtotal,
     freight: data.freight,
     totalGst,
@@ -249,12 +329,6 @@ export async function updateInvoice(
   let subtotal = 0;
   const lineItems: LineItem[] = data.lineItems.map((item) => {
     const amount = item.quantity * item.unitPrice;
-    let gstAmount = 0;
-    let totalRow = amount;
-    if (data.withGst) {
-      gstAmount = Math.round((amount * 5) / 100);
-      totalRow = amount + gstAmount;
-    }
     subtotal += amount;
     return {
       description: item.description,
@@ -263,12 +337,26 @@ export async function updateInvoice(
       amount,
       hsnSac: item.hsnSac,
       narration: item.narration,
-      ...(data.withGst && { gstRate: 5, gstAmount, totalRow }),
     };
   });
+
+  // Calculate GST on total subtotal (not per line item)
   const totalGst = data.withGst
-    ? lineItems.reduce((s, i) => s + (i.gstAmount ?? 0), 0)
+    ? Math.round((subtotal * 5) / 100)
     : undefined;
+
+  // Add gstAmount and totalRow to line items after totalGst is calculated
+  const lineItemsWithGst = data.withGst
+    ? lineItems.map((item) => {
+        const gstAmount = Math.round((item.amount * 5) / 100);
+        return {
+          ...item,
+          gstRate: 5,
+          gstAmount,
+          totalRow: item.amount + gstAmount,
+        };
+      })
+    : lineItems;
 
   const freightAmount = data.freight ?? 0;
   const taxableAmount = subtotal + freightAmount;
@@ -280,7 +368,7 @@ export async function updateInvoice(
       withGst: data.withGst,
       date: data.date,
       shippingAddress: data.shippingAddress,
-      lineItems,
+      lineItems: lineItemsWithGst,
       subtotal,
       freight: data.freight,
       totalGst,
