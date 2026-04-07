@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { chromium } from "playwright";
 import { getInvoiceById } from "@/lib/actions/invoices";
 import { getCustomerById } from "@/lib/actions/customers";
+import fs from "fs";
+import path from "path";
 
 function formatDate(d: Date | string): string {
   const date = typeof d === "string" ? new Date(d) : d;
@@ -230,18 +232,17 @@ export async function GET(
 
   const isPrint = _request.nextUrl.searchParams.get("print") === "true";
 
-  // Fetch logo as base64
+  // Fetch logo as base64 from filesystem to avoid SSL issues
   let logoBase64: string | undefined;
   try {
-    const logoUrl = `${_request.nextUrl.origin}/logo.png`;
-    const logoRes = await fetch(logoUrl);
-    if (logoRes.ok) {
-      const logoBuffer = await logoRes.arrayBuffer();
-      logoBase64 = Buffer.from(logoBuffer).toString("base64");
+    const logoPath = path.join(process.cwd(), "public", "logo.png");
+    if (fs.existsSync(logoPath)) {
+      const logoBuffer = fs.readFileSync(logoPath);
+      logoBase64 = logoBuffer.toString("base64");
     }
-  } catch(error) {
+  } catch (error) {
     // Ignore logo fetch errors
-    console.error("Error fetching logo:", error);
+    console.error("Error reading logo:", error);
   }
 
   const html = generatePrintHtml(invoice!, customer, logoBase64, isPrint);
@@ -257,7 +258,12 @@ export async function GET(
   // Generate PDF using Playwright
   let browser;
   try {
-    browser = await chromium.launch({ headless: true });
+    // Use executable path from env if available (for Render deployment)
+    const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined;
+    browser = await chromium.launch({ 
+      headless: true,
+      ...(executablePath && { executablePath }),
+    });
     const page = await browser.newPage();
     
     await page.setContent(html, { waitUntil: "networkidle" });
