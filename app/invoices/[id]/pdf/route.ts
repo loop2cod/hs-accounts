@@ -73,7 +73,7 @@ function generatePrintHtml(
   totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Grand Total:</td><td style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">${formatNum(grandTotal)}</td></tr>`;
 
   // Generate empty rows to fill table height (for visual extension)
-  const emptyRowsHtml = Array(10).fill(0).map(() => `
+  const emptyRowsHtml = Array(8).fill(0).map(() => `
     <tr>
       <td style="border-left:1px solid #000;border-right:1px solid #000;padding:4px">&nbsp;</td>
       <td style="border-left:1px solid #000;border-right:1px solid #000;padding:4px">&nbsp;</td>
@@ -376,7 +376,7 @@ export async function GET(
     });
 
     // Add empty rows
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 7; i++) {
       const emptyRow = invoice.withGst 
         ? ["", "", "", "", "", "", ""]
         : ["", "", "", "", "", ""];
