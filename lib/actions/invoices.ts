@@ -27,7 +27,7 @@ async function getNextInvoiceNumber(withGst: boolean): Promise<string> {
     { returnDocument: "after" }
   );
   const n = doc ? (doc[key] as number) : 1;
-  return withGst ? `INV-GST-${String(n).padStart(3, "0")}` : `INV-${String(n).padStart(3, "0")}`;
+  return withGst ? `INV-${String(n).padStart(3, "0")}` : `${String(n).padStart(3, "0")}`;
 }
 
 export async function getInvoicesByCustomer(customerId: string) {
