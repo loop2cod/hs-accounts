@@ -246,158 +246,163 @@ export default async function InvoiceViewPage({
 
       {/* Invoice Document - PRINT ONLY TEMPLATE */}
       <div className="invoice-doc invoice-print-template mx-auto max-w-none px-0 py-0 bg-white hidden print:block">
-        <div className="invoice-print-content">
-          <div className="inv-header mb-4">
-            <div className="flex justify-between items-start mb-3">
-              <div className="flex-1">
+        <div className="invoice-print-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', border: '2px solid #000', padding: '15px' }}>
+          <div className="invoice-print-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div className="inv-header mb-4">
+              <div className="flex justify-between items-start mb-3">
+                <div className="flex-1">
+                  {invoice.withGst && (
+                    <div className="text-[10px] text-gray-600 leading-tight">
+                      <div>GSTIN: 32BECPH7018J1ZR</div>
+                      <div>State Code: 32</div>
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-center justify-center">
+                  <img src="/logo" alt="Logo" className="w-24 h-24 object-contain" />
+                </div>
+                <div className="flex-1 text-right">
+                  <div className="text-xl font-bold mb-2">
+                    {invoice.withGst ? "TAX INVOICE" : "INVOICE"}
+                  </div>
+                  <div className="text-xs">
+                    <div><strong>Invoice No.:</strong> {invoice.invoiceNumber}</div>
+                    <div><strong>Date:</strong> {formatDate(invoice.date)}</div>
+                  </div>
+                </div>
+              </div>
+              <div className="text-center text-xs text-gray-600 leading-relaxed">
+                <div>18/883 Pakker HajiComplex, Gandhi Park, Payyannur, Kannur</div>
+                <div>Mob: 8078267673</div>
+              </div>
+            </div>
+
+            <div className="flex justify-between mb-4 text-sm">
+              <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
+                NAME: <strong>{customer?.shopName || "—"}</strong>
+                <br />
+                ADDRESS: <strong>{customer?.address || "—"}</strong>
+                <br />
                 {invoice.withGst && (
-                  <div className="text-[10px] text-gray-600 leading-tight">
-                    <div>GSTIN: 32BECPH7018J1ZR</div>
-                    <div>State Code: 32</div>
+                  <>
+                    GST IN: <strong>{customer?.gstNumber || "—"}</strong>
+                    <br />
+                  </>
+                )}
+                Phone: <strong>{customer?.phone || "—"}</strong>
+              </div>
+
+              <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
+                <strong>SHIPPING ADDRESS</strong>
+                <br />
+                NAME: <strong>{customer?.shopName || "—"}</strong>
+                <br />
+                ADDRESS: <strong>{invoice.shippingAddress || customer?.address || "—"}</strong>
+                <br />
+                State Code: <strong>32</strong>
+              </div>
+            </div>
+
+            {/* Line Items Table - Full height with vertical lines only */}
+            <div className="line-items-container" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+              <table className="line-items-table w-full text-sm" style={{ borderCollapse: 'collapse', border: '1px solid #000', height: '100%' }}>
+                <thead className="bg-neutral-100">
+                  <tr>
+                    <th className="p-1 w-8 text-center" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000' }}>#</th>
+                    <th className="p-1 text-left" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000' }}>Commodity / Item</th>
+                    {invoice.withGst && <th className="p-1 w-20 text-left" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000' }}>HSN/SAC</th>}
+                    <th className="p-1 w-32 text-left" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000' }}>Narration</th>
+                    <th className="p-1 w-24 text-right" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000' }}>Unit Price</th>
+                    <th className="p-1 w-16 text-right" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000' }}>Qty</th>
+                    <th className="p-1 w-28 text-right" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', borderBottom: '1px solid #000' }}>Amount</th>
+                  </tr>
+                </thead>
+                <tbody style={{ verticalAlign: 'top' }}>
+                  {invoice.lineItems.map((item, i) => (
+                    <tr key={i}>
+                      <td className="p-1 text-center" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000' }}>{i + 1}</td>
+                      <td className="p-1" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000' }}>{item.description}</td>
+                      {invoice.withGst && <td className="p-1" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000' }}>{item.hsnSac || ""}</td>}
+                      <td className="p-1" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000' }}>{item.narration || ""}</td>
+                      <td className="p-1 text-right" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000' }}>{formatCurrencyNoRound(item.unitPrice)}</td>
+                      <td className="p-1 text-right" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000' }}>{item.quantity}</td>
+                      <td className="p-1 text-right" style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000' }}>
+                        {formatCurrencyNoRound(item.amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="invoice-print-footer" style={{ marginTop: 'auto', pageBreakInside: 'avoid' }}>
+            <div className="flex text-sm border border-neutral-300 mb-4">
+              <div className="p-2 w-3/4 border-r border-neutral-300 flex flex-col justify-between">
+                <div>
+                  <strong>Grand Total in words:</strong>
+                  <div className="font-semibold text-neutral-800 lowercase">
+                    {numberToWords(invoice.totalAmount)}
+                  </div>
+                </div>
+                {invoice.notes && (
+                  <div className="mt-4 pt-2 border-t border-neutral-200 text-neutral-600">
+                    <strong>Notes:</strong> {invoice.notes}
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-center">
-                <img src="/logo" alt="Logo" className="w-24 h-24 object-contain" />
-              </div>
-              <div className="flex-1 text-right">
-                <div className="text-xl font-bold mb-2">
-                  {invoice.withGst ? "TAX INVOICE" : "INVOICE"}
-                </div>
-                <div className="text-xs">
-                  <div><strong>Invoice No.:</strong> {invoice.invoiceNumber}</div>
-                  <div><strong>Date:</strong> {formatDate(invoice.date)}</div>
-                </div>
-              </div>
-            </div>
-            <div className="text-center text-xs text-gray-600 leading-relaxed">
-              <div>18/883 Pakker HajiComplex, Gandhi Park, Payyannur, Kannur</div>
-              <div>Mob: 8078267673</div>
-            </div>
-          </div>
-
-          <div className="flex justify-between mb-4 text-sm">
-            <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
-              NAME: <strong>{customer?.shopName || "—"}</strong>
-              <br />
-              ADDRESS: <strong>{customer?.address || "—"}</strong>
-              <br />
-              {invoice.withGst && (
-                <>
-                  GST IN: <strong>{customer?.gstNumber || "—"}</strong>
-                  <br />
-                </>
-              )}
-              Phone: <strong>{customer?.phone || "—"}</strong>
-            </div>
-
-            <div className="inv-recipient border border-neutral-300 p-2 w-[48%] min-h-30">
-              <strong>SHIPPING ADDRESS</strong>
-              <br />
-              NAME: <strong>{customer?.shopName || "—"}</strong>
-              <br />
-              ADDRESS: <strong>{invoice.shippingAddress || customer?.address || "—"}</strong>
-              <br />
-              State Code: <strong>32</strong>
-            </div>
-          </div>
-
-          <table className="w-full border-collapse border border-neutral-300 text-sm mb-4">
-            <thead className="bg-neutral-100">
-              <tr>
-                <th className="border border-neutral-300 p-1 w-8 text-center">#</th>
-                <th className="border border-neutral-300 p-1 text-left">Commodity / Item</th>
-                {invoice.withGst && <th className="border border-neutral-300 p-1 w-20 text-left">HSN/SAC</th>}
-                <th className="border border-neutral-300 p-1 w-32 text-left">Narration</th>
-                <th className="border border-neutral-300 p-1 w-24 text-right">Unit Price</th>
-                <th className="border border-neutral-300 p-1 w-16 text-right">Qty</th>
-                <th className="border border-neutral-300 p-1 w-28 text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              {invoice.lineItems.map((item, i) => (
-                <tr key={i}>
-                  <td className="border border-neutral-300 p-1 text-center">{i + 1}</td>
-                  <td className="border border-neutral-300 p-1">{item.description}</td>
-                  {invoice.withGst && <td className="border border-neutral-300 p-1">{item.hsnSac || ""}</td>}
-                  <td className="border border-neutral-300 p-1">{item.narration || ""}</td>
-                  <td className="border border-neutral-300 p-1 text-right">{formatCurrencyNoRound(item.unitPrice)}</td>
-                  <td className="border border-neutral-300 p-1 text-right">{item.quantity}</td>
-                  <td className="border border-neutral-300 p-1 text-right">
-                    {formatCurrencyNoRound(item.amount)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        <div className="invoice-print-footer">
-          <div className="flex text-sm border border-neutral-300 mb-4">
-          <div className="p-2 w-3/4 border-r border-neutral-300 flex flex-col justify-between">
-            <div>
-              <strong>Grand Total in words:</strong>
-              <div className="font-semibold text-neutral-800 lowercase">
-                {numberToWords(invoice.totalAmount)}
-              </div>
-            </div>
-            {invoice.notes && (
-              <div className="mt-4 pt-2 border-t border-neutral-200 text-neutral-600">
-                <strong>Notes:</strong> {invoice.notes}
-              </div>
-            )}
-          </div>
-          <div className="w-1/4">
-            <table className="w-full">
-              <tbody>
-                <tr className="border-b border-neutral-300">
-                  <td className="p-1 font-medium bg-neutral-50/50">Amount</td>
-                  <td className="p-1 text-right">{formatCurrencyNoRound(invoice.subtotal)}</td>
-                </tr>
-                {invoice.freight != null && invoice.freight > 0 && (
-                  <tr className="border-b border-neutral-300">
-                    <td className="p-1 font-medium bg-neutral-50/50">Freight</td>
-                    <td className="p-1 text-right">{formatCurrencyNoRound(Math.abs(invoice.freight))}</td>
-                  </tr>
-                )}
-                {invoice.withGst && (
-                  <>
+              <div className="w-1/4">
+                <table className="w-full">
+                  <tbody>
                     <tr className="border-b border-neutral-300">
-                      <td className="p-1 font-medium bg-neutral-50/50">CGST (2.5%)</td>
-                      <td className="p-1 text-right">
-                        {formatCurrencyNoRound(cgst)}
+                      <td className="p-1 font-medium bg-neutral-50/50">Amount</td>
+                      <td className="p-1 text-right">{formatCurrencyNoRound(invoice.subtotal)}</td>
+                    </tr>
+                    {invoice.freight != null && invoice.freight > 0 && (
+                      <tr className="border-b border-neutral-300">
+                        <td className="p-1 font-medium bg-neutral-50/50">Freight</td>
+                        <td className="p-1 text-right">{formatCurrencyNoRound(Math.abs(invoice.freight))}</td>
+                      </tr>
+                    )}
+                    {invoice.withGst && (
+                      <>
+                        <tr className="border-b border-neutral-300">
+                          <td className="p-1 font-medium bg-neutral-50/50">CGST (2.5%)</td>
+                          <td className="p-1 text-right">
+                            {formatCurrencyNoRound(cgst)}
+                          </td>
+                        </tr>
+                        <tr className="border-b border-neutral-300">
+                          <td className="p-1 font-medium bg-neutral-50/50">SGST (2.5%)</td>
+                          <td className="p-1 text-right">
+                            {formatCurrencyNoRound(sgst)}
+                          </td>
+                        </tr>
+                      </>
+                    )}
+                    <tr>
+                      <td className="p-2 font-bold bg-neutral-200/50">Grand Total</td>
+                      <td className="p-2 text-right font-bold text-lg bg-neutral-200/50">
+                        {formatCurrency(invoice.totalAmount)}
                       </td>
                     </tr>
-                    <tr className="border-b border-neutral-300">
-                      <td className="p-1 font-medium bg-neutral-50/50">SGST (2.5%)</td>
-                      <td className="p-1 text-right">
-                        {formatCurrencyNoRound(sgst)}
-                      </td>
-                    </tr>
-                  </>
-                )}
-                <tr>
-                  <td className="p-2 font-bold bg-neutral-200/50">Grand Total</td>
-                  <td className="p-2 text-right font-bold text-lg bg-neutral-200/50">
-                    {formatCurrency(invoice.totalAmount)}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
-          <div className="text-xs border border-neutral-300 p-2 flex justify-between">
-            <div>
-              <strong>DECLARATION:</strong> Certified that all the particulars shown in the above invoice are true and correct.
-            </div>
-            <div className="text-right flex flex-col items-end">
-              <span className="mb-8">for <strong>HAJASS TRADERS</strong></span>
-              <span>Authorised Signatory</span>
+            <div className="text-xs border border-neutral-300 p-2 flex justify-between">
+              <div>
+                <strong>DECLARATION:</strong> Certified that all the particulars shown in the above invoice are true and correct.
+              </div>
+              <div className="text-right flex flex-col items-end">
+                <span className="mb-8">for <strong>HAJASS TRADERS</strong></span>
+                <span>Authorised Signatory</span>
+              </div>
             </div>
           </div>
         </div>
-      </div >
+      </div>
     </div>
   );
 }
