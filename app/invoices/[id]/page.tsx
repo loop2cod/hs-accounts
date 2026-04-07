@@ -259,7 +259,7 @@ export default async function InvoiceViewPage({
                   )}
                 </div>
                 <div className="flex items-center justify-center">
-                  <img src="/logo" alt="Logo" className="w-24 h-24 object-contain" />
+                  <img src="/logo.png" alt="Logo" className="w-24 h-24 object-contain" />
                 </div>
                 <div className="flex-1 text-right">
                   <div className="text-xl font-bold mb-2">

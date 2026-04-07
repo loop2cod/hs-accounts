@@ -239,8 +239,9 @@ export async function GET(
       const logoBuffer = await logoRes.arrayBuffer();
       logoBase64 = Buffer.from(logoBuffer).toString("base64");
     }
-  } catch {
+  } catch(error) {
     // Ignore logo fetch errors
+    console.error("Error fetching logo:", error);
   }
 
   const html = generatePrintHtml(invoice!, customer, logoBase64, isPrint);
