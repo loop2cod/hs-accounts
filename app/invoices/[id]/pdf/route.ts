@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { chromium } from "playwright";
+import puppeteer from "puppeteer-core";
 import { getInvoiceById } from "@/lib/actions/invoices";
 import { getCustomerById } from "@/lib/actions/customers";
 import fs from "fs";
@@ -72,7 +72,7 @@ function generatePrintHtml(
   totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Grand Total:</td><td style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">${formatNum(grandTotal)}</td></tr>`;
 
   // Generate empty rows to fill table height (for visual extension)
-  const emptyRowsHtml = Array(12).fill(0).map(() => `
+  const emptyRowsHtml = Array(10).fill(0).map(() => `
     <tr>
       <td style="border-left:1px solid #000;border-right:1px solid #000;padding:4px">&nbsp;</td>
       <td style="border-left:1px solid #000;border-right:1px solid #000;padding:4px">&nbsp;</td>
@@ -255,21 +255,57 @@ export async function GET(
     });
   }
 
-  // Generate PDF using Playwright
+  // Generate PDF using Puppeteer
   let browser;
   try {
-    // Use executable path from env if available (for Render deployment)
-    const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined;
-    browser = await chromium.launch({ 
+    // Determine executable path based on environment
+    let executablePath: string | undefined;
+    
+    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+      // Custom path from env (for deployment environments)
+      executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+    } else if (process.platform === "darwin") {
+      // macOS - try common Chrome/Chromium locations
+      const macPaths = [
+        "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+        "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        "/opt/homebrew/bin/chromium",
+        "/usr/local/bin/chromium",
+      ];
+      for (const p of macPaths) {
+        if (fs.existsSync(p)) {
+          executablePath = p;
+          break;
+        }
+      }
+    } else if (process.platform === "linux") {
+      // Linux paths
+      const linuxPaths = [
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+      ];
+      for (const p of linuxPaths) {
+        if (fs.existsSync(p)) {
+          executablePath = p;
+          break;
+        }
+      }
+    }
+
+    browser = await puppeteer.launch({
       headless: true,
-      ...(executablePath && { executablePath }),
+      executablePath,
+      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
     });
+
     const page = await browser.newPage();
     
-    await page.setContent(html, { waitUntil: "networkidle" });
+    await page.setContent(html, { waitUntil: "networkidle0" });
     
     // Wait for fonts and images to load
-    await page.waitForTimeout(500);
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -286,10 +322,7 @@ export async function GET(
     }).replace(/\//g, "-");
     const fileName = `invoice-${invoice.invoiceNumber}-${dateStr}-${shopNameStr}.pdf`;
 
-    // Convert Buffer to Uint8Array for Response
-    const pdfUint8Array = new Uint8Array(pdfBuffer);
-
-    return new Response(pdfUint8Array, {
+    return new Response(pdfBuffer as unknown as BodyInit, {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${fileName}"`,
