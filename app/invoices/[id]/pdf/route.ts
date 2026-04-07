@@ -157,7 +157,7 @@ function generatePrintHtml(
     <div class="address">
       NAME: <strong>${custName}</strong><br>
       ADDRESS: <strong>${customer?.address || "—"}</strong><br>
-      ${invoice.withGst && customer?.gstNumber ? `GST IN: <strong>${customer.gstNumber}</strong><br>` : "GST IN:"}
+      ${invoice.withGst && customer?.gstNumber ? `GST: <strong>${customer.gstNumber}</strong><br>` : "GST: <strong>—</strong><br>"}
 
       Phone: <strong>${customer?.phone || "—"}</strong>
     </div>

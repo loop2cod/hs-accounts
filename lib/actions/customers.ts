@@ -6,11 +6,28 @@ import { getDb } from "@/lib/db";
 import type { Customer, RouteWeekday } from "@/lib/types";
 import type { ObjectId } from "mongodb";
 
-export async function getCustomers(filters?: { routeWeekday?: RouteWeekday; includeDeleted?: boolean }) {
+export async function getCustomers(filters?: { 
+  routeWeekday?: RouteWeekday; 
+  search?: string;
+  includeDeleted?: boolean 
+}) {
   const db = await getDb();
   const query: any = {};
+  
   if (filters?.routeWeekday != null) query.routeWeekday = filters.routeWeekday;
   if (!filters?.includeDeleted) query.deleted = { $ne: true };
+  
+  // Add search filter if provided
+  if (filters?.search?.trim()) {
+    const searchRegex = new RegExp(filters.search.trim(), "i");
+    query.$or = [
+      { shopName: searchRegex },
+      { name: searchRegex },
+      { phone: searchRegex },
+      { address: searchRegex },
+    ];
+  }
+  
   const list = await db
     .collection<Customer>("customers")
     .find(query)

@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/Card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Pagination } from "@/components/ui/Pagination";
 import { PaymentListItem } from "@/components/payments/PaymentListItem";
+import { PaymentSearchBar } from "@/components/payments/PaymentSearchBar";
 import {
   CreditCard,
   Download,
@@ -17,7 +18,7 @@ import {
 export default async function PaymentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ customerId?: string; page?: string }>;
+  searchParams: Promise<{ customerId?: string; search?: string; page?: string }>;
 }) {
   const params = await searchParams;
   const page = parseInt(params.page ?? "1", 10);
@@ -25,6 +26,7 @@ export default async function PaymentsPage({
 
   const { payments, totalPages } = await getPayments({
     customerId: params.customerId,
+    search: params.search,
     page,
     limit,
   });
@@ -32,7 +34,14 @@ export default async function PaymentsPage({
   const customers = await getCustomers();
   const customerMap = new Map(customers.map((c) => [c._id, c]));
 
-  const baseUrl = `/payments${params.customerId ? `?customerId=${params.customerId}` : ""}`;
+  const buildUrl = (pageNum: number) => {
+    const urlParams = new URLSearchParams();
+    if (params.customerId) urlParams.set("customerId", params.customerId);
+    if (params.search) urlParams.set("search", params.search);
+    if (pageNum > 1) urlParams.set("page", pageNum.toString());
+    const queryString = urlParams.toString();
+    return `/payments${queryString ? `?${queryString}` : ""}`;
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 px-4 py-8">
@@ -57,6 +66,11 @@ export default async function PaymentsPage({
         </div>
       </header>
 
+      <PaymentSearchBar 
+        initialSearch={params.search ?? ""} 
+        customerId={params.customerId}
+      />
+
       <Card className="overflow-hidden border-none shadow-xl shadow-slate-200/50">
         <CardContent className="p-0">
           {payments.length === 0 ? (
@@ -64,8 +78,14 @@ export default async function PaymentsPage({
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CreditCard className="w-8 h-8 text-slate-400" />
               </div>
-              <h3 className="text-lg font-medium text-slate-900">No payments recorded</h3>
-              <p className="text-slate-500 mt-1 max-w-xs mx-auto">Once you start receiving payments, they will appear in this list.</p>
+              <h3 className="text-lg font-medium text-slate-900">
+                {params.search ? "No payments found" : "No payments recorded"}
+              </h3>
+              <p className="text-slate-500 mt-1 max-w-xs mx-auto">
+                {params.search 
+                  ? "Try adjusting your search terms." 
+                  : "Once you start receiving payments, they will appear in this list."}
+              </p>
             </div>
           ) : (
             <>
@@ -79,7 +99,11 @@ export default async function PaymentsPage({
                 ))}
               </div>
               <div className="border-t border-slate-50 px-6">
-                <Pagination currentPage={page} totalPages={totalPages} baseUrl={baseUrl} />
+                <Pagination 
+                  currentPage={page} 
+                  totalPages={totalPages} 
+                  baseUrl={buildUrl(1)}
+                />
               </div>
             </>
           )}
@@ -88,4 +112,3 @@ export default async function PaymentsPage({
     </div>
   );
 }
-

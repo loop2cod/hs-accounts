@@ -285,7 +285,7 @@ export default async function InvoiceViewPage({
                 <br />
                 {invoice.withGst && (
                   <>
-                    GST IN: <strong>{customer?.gstNumber || "—"}</strong>
+                    GST: <strong>{customer?.gstNumber || "—"}</strong>
                     <br />
                   </>
                 )}

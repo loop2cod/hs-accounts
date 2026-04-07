@@ -15,9 +15,28 @@ export interface DueBalanceRow {
   balance: number;
 }
 
-export async function getDueBalanceReport(weekdayFilter?: number): Promise<DueBalanceRow[]> {
+export async function getDueBalanceReport(
+  weekdayFilter?: number,
+  search?: string
+): Promise<DueBalanceRow[]> {
   const db = await getDb();
-  const filter: any = weekdayFilter !== undefined ? { routeWeekday: weekdayFilter } : {};
+  
+  // Build customer filter
+  const filter: any = {};
+  
+  if (weekdayFilter !== undefined) {
+    filter.routeWeekday = weekdayFilter;
+  }
+  
+  // Add search filter if provided
+  if (search?.trim()) {
+    const searchRegex = new RegExp(search.trim(), "i");
+    filter.$or = [
+      { shopName: searchRegex },
+      { name: searchRegex },
+    ];
+  }
+  
   const customers = await db
     .collection<Customer>("customers")
     .find(filter)

@@ -2,16 +2,16 @@ import Link from "next/link";
 import { getDueBalanceReport } from "@/lib/actions/reports";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { formatCurrency, ROUTE_WEEKDAYS } from "@/lib/utils";
-import { Filter } from "lucide-react";
+import { Filter, Search } from "lucide-react";
 
 export default async function DueBalanceReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ weekday?: string }>;
+  searchParams: Promise<{ weekday?: string; search?: string }>;
 }) {
-  const { weekday } = await searchParams;
+  const { weekday, search } = await searchParams;
   const weekdayFilter = weekday ? parseInt(weekday, 10) : undefined;
-  const rows = await getDueBalanceReport(weekdayFilter);
+  const rows = await getDueBalanceReport(weekdayFilter, search);
 
   const totalDue = rows.reduce((sum, r) => sum + r.due, 0);
   const totalPaid = rows.reduce((sum, r) => sum + r.paid, 0);
@@ -33,10 +33,33 @@ export default async function DueBalanceReportPage({
         </div>
       </div>
 
+      {/* Search Bar */}
+      <form className="relative" action="/reports/due-balance" method="GET">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+        <input
+          type="text"
+          name="search"
+          placeholder="Search by shop name or customer name..."
+          defaultValue={search ?? ""}
+          className="w-full pl-10 pr-10 py-2 text-sm border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all bg-white"
+        />
+        {weekday && <input type="hidden" name="weekday" value={weekday} />}
+        {search && (
+          <a
+            href={`/reports/due-balance${weekday ? `?weekday=${weekday}` : ""}`}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-neutral-100 rounded-full transition-colors"
+            aria-label="Clear search"
+          >
+            <span className="text-neutral-400 text-xs">✕</span>
+          </a>
+        )}
+      </form>
+
+      {/* Weekday Filters */}
       <div className="flex flex-wrap items-center gap-2">
         <Filter className="w-4 h-4 text-neutral-500" />
         <Link
-          href="/reports/due-balance"
+          href={`/reports/due-balance${search ? `?search=${encodeURIComponent(search)}` : ""}`}
           className={`px-3 py-1 text-sm rounded-full border ${
             weekday === undefined
               ? "bg-primary text-white border-primary"
@@ -48,7 +71,7 @@ export default async function DueBalanceReportPage({
         {ROUTE_WEEKDAYS.map((d) => (
           <Link
             key={d.value}
-            href={`/reports/due-balance?weekday=${d.value}`}
+            href={`/reports/due-balance?weekday=${d.value}${search ? `&search=${encodeURIComponent(search)}` : ""}`}
             className={`px-3 py-1 text-sm rounded-full border ${
               weekdayFilter === d.value
                 ? "bg-primary text-white border-primary"
@@ -119,7 +142,7 @@ export default async function DueBalanceReportPage({
           </div>
           {rows.length === 0 && (
             <p className="px-3 py-4 text-center text-sm text-neutral-500">
-              No customer data.
+              {search ? "No customers found matching your search." : "No customer data."}
             </p>
           )}
         </CardContent>

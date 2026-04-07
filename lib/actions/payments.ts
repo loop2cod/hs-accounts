@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/lib/db";
-import type { Payment } from "@/lib/types";
+import type { Payment, Customer } from "@/lib/types";
 import type { ObjectId } from "mongodb";
 
 export async function getPaymentsByCustomer(customerId: string) {
@@ -48,17 +48,67 @@ export async function getPaymentById(id: string) {
 
 export async function getPayments(filters?: {
   customerId?: string;
+  search?: string;
   page?: number;
   limit?: number;
 }) {
   const db = await getDb();
   const { ObjectId } = await import("mongodb");
+  
+  // Build payment query
   const query: Record<string, unknown> = {};
+  
   if (filters?.customerId) {
     try {
       query.customerId = new ObjectId(filters.customerId);
     } catch {
       // ignore
+    }
+  }
+
+  // Handle search - find matching customers first
+  let customerIds: ObjectId[] | undefined;
+  if (filters?.search?.trim()) {
+    const searchRegex = new RegExp(filters.search.trim(), "i");
+    const matchingCustomers = await db
+      .collection<Customer>("customers")
+      .find({
+        $or: [
+          { shopName: searchRegex },
+          { name: searchRegex },
+        ],
+      })
+      .project({ _id: 1 })
+      .toArray();
+    
+    customerIds = matchingCustomers.map((c) => c._id!);
+    
+    // If no customers match, return empty result
+    if (customerIds.length === 0) {
+      return {
+        payments: [],
+        total: 0,
+        page: filters?.page ?? 1,
+        limit: filters?.limit ?? 10,
+        totalPages: 0,
+      };
+    }
+    
+    // Add customer filter to query
+    if (filters?.customerId) {
+      // Both customerId and search specified - intersection
+      const requestedId = new ObjectId(filters.customerId);
+      if (!customerIds.some((id) => id.equals(requestedId))) {
+        return {
+          payments: [],
+          total: 0,
+          page: filters?.page ?? 1,
+          limit: filters?.limit ?? 10,
+          totalPages: 0,
+        };
+      }
+    } else {
+      query.customerId = { $in: customerIds };
     }
   }
 
