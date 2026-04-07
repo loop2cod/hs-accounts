@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import puppeteer from "puppeteer-core";
+import chromium from "@sparticuz/chromium";
 import { getInvoiceById } from "@/lib/actions/invoices";
 import { getCustomerById } from "@/lib/actions/customers";
 import fs from "fs";
@@ -261,8 +262,11 @@ export async function GET(
     // Determine executable path based on environment
     let executablePath: string | undefined;
     
-    if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-      // Custom path from env (for deployment environments)
+    if (process.env.VERCEL || process.env.AWS_LAMBDA_FUNCTION_VERSION) {
+      // Running on Vercel or AWS Lambda - use @sparticuz/chromium
+      executablePath = await chromium.executablePath();
+    } else if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+      // Custom path from env
       executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
     } else if (process.platform === "darwin") {
       // macOS - try common Chrome/Chromium locations
@@ -297,7 +301,7 @@ export async function GET(
     browser = await puppeteer.launch({
       headless: true,
       executablePath,
-      args: ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
+      args: chromium.args || ["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"],
     });
 
     const page = await browser.newPage();
