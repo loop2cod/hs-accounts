@@ -17,6 +17,12 @@ function formatNum(n: number): string {
   return n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
+// Format number to 2 decimal places without rounding (truncate)
+function formatNumNoRound(n: number): string {
+  const truncated = Math.floor(n * 100) / 100;
+  return truncated.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
 function generatePrintHtml(
   invoice: NonNullable<Awaited<ReturnType<typeof getInvoiceById>>>,
   customer: Awaited<ReturnType<typeof getCustomerById>>
@@ -30,25 +36,35 @@ function generatePrintHtml(
       <td style="border:1px solid #ccc;padding:4px">${item.description}</td>
       ${invoice.withGst ? `<td style="border:1px solid #ccc;padding:4px">${item.hsnSac || ""}</td>` : ""}
       <td style="border:1px solid #ccc;padding:4px">${item.narration || ""}</td>
-      <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(item.unitPrice)}</td>
+      <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNumNoRound(item.unitPrice)}</td>
       <td style="border:1px solid #ccc;padding:4px;text-align:right">${item.quantity}</td>
-      <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(item.amount)}</td>
+      <td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNumNoRound(item.amount)}</td>
     </tr>
   `).join("");
 
-  const subtotalRow = `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Subtotal:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(invoice.subtotal)}</td></tr>`;
+  // Calculate all totals consistently
+  const gstRate = 0.025; // 2.5%
+  const cgst = invoice.withGst ? invoice.subtotal * gstRate : 0;
+  const sgst = invoice.withGst ? invoice.subtotal * gstRate : 0;
+  const freight = invoice.freight || 0;
+  const grandTotal = invoice.subtotal + cgst + sgst + freight;
+
+  const subtotalRow = `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Subtotal:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNumNoRound(invoice.subtotal)}</td></tr>`;
 
   let totalsHtml = subtotalRow;
-  if (invoice.freight != null && invoice.freight > 0) {
-    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">Freight:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(invoice.freight)}</td></tr>`;
-    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">Taxable Amt:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(invoice.subtotal + invoice.freight)}</td></tr>`;
+  
+  // GST rows - calculate fresh from subtotal to avoid rounding issues
+  if (invoice.withGst) {
+    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">CGST-2.5%:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNumNoRound(cgst)}</td></tr>`;
+    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">SGST-2.5%:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNumNoRound(sgst)}</td></tr>`;
   }
-  if (invoice.withGst && invoice.totalGst != null) {
-    const halfGst = invoice.totalGst / 2;
-    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">CGST-2.5%:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(halfGst)}</td></tr>`;
-    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">SGST-2.5%:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNum(halfGst)}</td></tr>`;
+  
+  // Freight shown after taxes (no tax on freight)
+  if (freight > 0) {
+    totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right">Freight:</td><td style="border:1px solid #ccc;padding:4px;text-align:right">${formatNumNoRound(freight)}</td></tr>`;
   }
-  totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Grand Total:</td><td style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">${formatNum(invoice.totalAmount)}</td></tr>`;
+  
+  totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Grand Total:</td><td style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">${formatNum(grandTotal)}</td></tr>`;
 
   return `<!DOCTYPE html>
 <html>
@@ -125,7 +141,8 @@ function generatePrintHtml(
     <div class="address">
       <strong>SHIPPING ADDRESS</strong><br>
       NAME: <strong>${custName}</strong><br>
-      ADDRESS: <strong>${invoice.shippingAddress || customer?.address || "—"}</strong>
+      ADDRESS: <strong>${invoice.shippingAddress || customer?.address || "—"}</strong><br>
+      State Code: <strong>32</strong>
     </div>
   </div>
   
@@ -151,7 +168,7 @@ function generatePrintHtml(
     <div class="totals">
       <div class="totals-left">
         <strong>Grand Total in words:</strong><br>
-        <strong>${numberToWords(invoice.totalAmount).toLowerCase()}</strong>
+        <strong>${numberToWords(grandTotal).toLowerCase()}</strong>
         ${invoice.notes ? `<br><br><strong>Notes:</strong> ${invoice.notes}` : ""}
       </div>
       <div class="totals-right">
@@ -204,6 +221,13 @@ export async function GET(
   const pageWidth = internal?.pageSize?.width ?? 210;
   const pageHeight = (doc.internal.pageSize.getHeight ? doc.internal.pageSize.getHeight() : doc.internal.pageSize.height) as number;
   const contentWidth = pageWidth - margin * 2;
+
+  // Calculate all totals consistently (same as HTML)
+  const gstRate = 0.025; // 2.5%
+  const cgst = invoice.withGst ? invoice.subtotal * gstRate : 0;
+  const sgst = invoice.withGst ? invoice.subtotal * gstRate : 0;
+  const freight = invoice.freight || 0;
+  const grandTotal = invoice.subtotal + cgst + sgst + freight;
 
   // Draw border around entire page
   doc.setDrawColor(0, 0, 0);
@@ -341,6 +365,13 @@ export async function GET(
   const shipAddr = invoice.shippingAddress || customer?.address || "—";
   const shipAddrLines = doc.splitTextToSize(shipAddr, boxWidth - 20);
   doc.text(shipAddrLines, rightBoxX + 18, textY);
+  textY += shipAddrLines.length * 4;
+  
+  // Add State Code to shipping address
+  doc.setFont("helvetica", "normal");
+  doc.text(`State Code: `, rightBoxX + 2, textY);
+  doc.setFont("helvetica", "bold");
+  doc.text("32", rightBoxX + 20, textY);
 
   y += boxHeight + 5;
 
@@ -357,9 +388,9 @@ export async function GET(
     }
     row.push(
       item.narration || "",
-      formatNum(item.unitPrice),
+      formatNumNoRound(item.unitPrice),
       String(item.quantity),
-      formatNum(item.amount)
+      formatNumNoRound(item.amount)
     );
 
     return row;
@@ -452,7 +483,7 @@ export async function GET(
 
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  const wordsStr = numberToWords(invoice.totalAmount).toLowerCase();
+  const wordsStr = numberToWords(grandTotal).toLowerCase();
   const wordLines = doc.splitTextToSize(wordsStr, wordsBoxWidth - 4);
   doc.text(wordLines, margin + 2, totY + 8);
 
@@ -489,41 +520,13 @@ export async function GET(
   doc.line(totalsBoxX, rowY + rowHeight, totalsBoxX + totalsBoxWidth, rowY + rowHeight);
 
   doc.setFont("helvetica", "bold");
-  doc.text("Amount", totalsBoxX + 2, rowY + 3.5);
+  doc.text("Subtotal", totalsBoxX + 2, rowY + 3.5);
   doc.setFont("helvetica", "normal");
-  doc.text(formatNum(invoice.subtotal), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
+  doc.text(formatNumNoRound(invoice.subtotal), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
   rowY += rowHeight;
 
-  // Freight row
-  if (invoice.freight != null && invoice.freight > 0) {
-    doc.setFillColor(250, 250, 250);
-    doc.rect(totalsBoxX, rowY, totalsBoxWidth, rowHeight, 'F');
-    doc.line(totalsBoxX, rowY + rowHeight, totalsBoxX + totalsBoxWidth, rowY + rowHeight);
-
-    doc.setFont("helvetica", "bold");
-    doc.text("Freight", totalsBoxX + 2, rowY + 3.5);
-    doc.setFont("helvetica", "normal");
-    doc.text(formatNum(Math.abs(invoice.freight)), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
-    rowY += rowHeight;
-
-    // Taxable amount row
-    doc.setFillColor(250, 250, 250);
-    doc.rect(totalsBoxX, rowY, totalsBoxWidth, rowHeight, 'F');
-    doc.line(totalsBoxX, rowY + rowHeight, totalsBoxX + totalsBoxWidth, rowY + rowHeight);
-
-    doc.setFontSize(6);
-    doc.setFont("helvetica", "bold");
-    doc.text("Taxable Amt", totalsBoxX + 2, rowY + 3.5);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.text(formatNum(invoice.subtotal + invoice.freight), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
-    rowY += rowHeight;
-  }
-
-  // GST rows
-  if (invoice.withGst && invoice.totalGst != null) {
-    const halfGst = invoice.totalGst / 2;
-
+  // GST rows - calculate fresh from subtotal to avoid rounding issues
+  if (invoice.withGst) {
     // CGST row
     doc.setFillColor(250, 250, 250);
     doc.rect(totalsBoxX, rowY, totalsBoxWidth, rowHeight, 'F');
@@ -532,7 +535,7 @@ export async function GET(
     doc.setFont("helvetica", "bold");
     doc.text("CGST (2.5%)", totalsBoxX + 2, rowY + 3.5);
     doc.setFont("helvetica", "normal");
-    doc.text(formatNum(halfGst), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
+    doc.text(formatNumNoRound(cgst), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
     rowY += rowHeight;
 
     // SGST row
@@ -543,7 +546,20 @@ export async function GET(
     doc.setFont("helvetica", "bold");
     doc.text("SGST (2.5%)", totalsBoxX + 2, rowY + 3.5);
     doc.setFont("helvetica", "normal");
-    doc.text(formatNum(halfGst), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
+    doc.text(formatNumNoRound(sgst), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
+    rowY += rowHeight;
+  }
+
+  // Freight row (shown after taxes - no tax on freight)
+  if (freight > 0) {
+    doc.setFillColor(250, 250, 250);
+    doc.rect(totalsBoxX, rowY, totalsBoxWidth, rowHeight, 'F');
+    doc.line(totalsBoxX, rowY + rowHeight, totalsBoxX + totalsBoxWidth, rowY + rowHeight);
+
+    doc.setFont("helvetica", "bold");
+    doc.text("Freight", totalsBoxX + 2, rowY + 3.5);
+    doc.setFont("helvetica", "normal");
+    doc.text(formatNumNoRound(freight), totalsBoxX + totalsBoxWidth - 2, rowY + 3.5, { align: "right" });
     rowY += rowHeight;
   }
 
@@ -556,7 +572,7 @@ export async function GET(
   doc.setFont("helvetica", "bold");
   doc.text("Grand Total", totalsBoxX + 2, rowY + remainingHeight / 2 + 1);
   doc.setFontSize(9);
-  doc.text(formatNum(invoice.totalAmount), totalsBoxX + totalsBoxWidth - 2, rowY + remainingHeight / 2 + 1, { align: "right" });
+  doc.text(formatNum(grandTotal), totalsBoxX + totalsBoxWidth - 2, rowY + remainingHeight / 2 + 1, { align: "right" });
 
   // ----- Declaration Box -----
   const declY = totY + wordsBoxHeight + spacing;

@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-const PIN = "830380";
+const PIN = "830320";
 const COOKIE_NAME = "hs_auth_token";
 
 export async function login(state: any, formData: FormData) {

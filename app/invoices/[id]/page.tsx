@@ -22,6 +22,17 @@ import {
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { numberToWords } from "@/lib/numberToWords";
 
+// Format currency without rounding (truncate to 2 decimal places)
+function formatCurrencyNoRound(value: number): string {
+  const truncated = Math.floor(value * 100) / 100;
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(truncated);
+}
+
 export default async function InvoiceViewPage({
   params,
 }: {
@@ -31,6 +42,11 @@ export default async function InvoiceViewPage({
   const invoice = await getInvoiceById(id);
   if (!invoice) notFound();
   const customer = await getCustomerById(invoice.customerId);
+
+  // Calculate GST fresh from subtotal (same as PDF)
+  const gstRate = 0.025;
+  const cgst = invoice.withGst ? invoice.subtotal * gstRate : 0;
+  const sgst = invoice.withGst ? invoice.subtotal * gstRate : 0;
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 px-4 py-8">
@@ -108,9 +124,9 @@ export default async function InvoiceViewPage({
                         </td>
                         <td className="px-6 py-4 text-slate-600">{item.narration || "-"}</td>
                         <td className="px-6 py-4 text-right tabular-nums text-slate-600">{item.quantity}</td>
-                        <td className="px-6 py-4 text-right tabular-nums text-slate-600">{formatCurrency(item.unitPrice)}</td>
+                        <td className="px-6 py-4 text-right tabular-nums text-slate-600">{formatCurrencyNoRound(item.unitPrice)}</td>
                         <td className="px-6 py-4 text-right tabular-nums font-bold text-slate-900">
-                          {formatCurrency(item.amount)}
+                          {formatCurrencyNoRound(item.amount)}
                         </td>
                       </tr>
                     ))}
@@ -143,23 +159,23 @@ export default async function InvoiceViewPage({
                 <div className="space-y-3 w-full md:w-64">
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-slate-500 font-medium">Subtotal</span>
-                    <span className="font-semibold text-slate-900 tabular-nums">{formatCurrency(invoice.subtotal)}</span>
+                    <span className="font-semibold text-slate-900 tabular-nums">{formatCurrencyNoRound(invoice.subtotal)}</span>
                   </div>
                   {invoice.freight != null && invoice.freight > 0 && (
                     <div className="flex justify-between items-center text-sm">
                       <span className="text-slate-500 font-medium">Freight</span>
-                      <span className="font-semibold text-slate-900 tabular-nums">{formatCurrency(invoice.freight)}</span>
+                      <span className="font-semibold text-slate-900 tabular-nums">{formatCurrencyNoRound(invoice.freight)}</span>
                     </div>
                   )}
-                  {invoice.withGst && invoice.totalGst != null && (
+                  {invoice.withGst && (
                     <div className="space-y-2 pt-2 border-t border-slate-200/60">
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-slate-400 font-medium tracking-tight">CGST (2.5%)</span>
-                        <span className="font-semibold text-slate-600 tabular-nums">{formatCurrency(invoice.totalGst / 2)}</span>
+                        <span className="font-semibold text-slate-600 tabular-nums">{formatCurrencyNoRound(cgst)}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
                         <span className="text-slate-400 font-medium tracking-tight">SGST (2.5%)</span>
-                        <span className="font-semibold text-slate-600 tabular-nums">{formatCurrency(invoice.totalGst / 2)}</span>
+                        <span className="font-semibold text-slate-600 tabular-nums">{formatCurrencyNoRound(sgst)}</span>
                       </div>
                     </div>
                   )}
@@ -281,6 +297,8 @@ export default async function InvoiceViewPage({
               NAME: <strong>{customer?.shopName || "—"}</strong>
               <br />
               ADDRESS: <strong>{invoice.shippingAddress || customer?.address || "—"}</strong>
+              <br />
+              State Code: <strong>32</strong>
             </div>
           </div>
 
@@ -303,10 +321,10 @@ export default async function InvoiceViewPage({
                   <td className="border border-neutral-300 p-1">{item.description}</td>
                   {invoice.withGst && <td className="border border-neutral-300 p-1">{item.hsnSac || ""}</td>}
                   <td className="border border-neutral-300 p-1">{item.narration || ""}</td>
-                  <td className="border border-neutral-300 p-1 text-right">{formatCurrency(item.unitPrice)}</td>
+                  <td className="border border-neutral-300 p-1 text-right">{formatCurrencyNoRound(item.unitPrice)}</td>
                   <td className="border border-neutral-300 p-1 text-right">{item.quantity}</td>
                   <td className="border border-neutral-300 p-1 text-right">
-                    {formatCurrency(item.amount)}
+                    {formatCurrencyNoRound(item.amount)}
                   </td>
                 </tr>
               ))}
@@ -334,34 +352,26 @@ export default async function InvoiceViewPage({
               <tbody>
                 <tr className="border-b border-neutral-300">
                   <td className="p-1 font-medium bg-neutral-50/50">Amount</td>
-                  <td className="p-1 text-right">{formatCurrency(invoice.subtotal)}</td>
+                  <td className="p-1 text-right">{formatCurrencyNoRound(invoice.subtotal)}</td>
                 </tr>
                 {invoice.freight != null && invoice.freight > 0 && (
                   <tr className="border-b border-neutral-300">
                     <td className="p-1 font-medium bg-neutral-50/50">Freight</td>
-                    <td className="p-1 text-right">{formatCurrency(Math.abs(invoice.freight))}</td>
+                    <td className="p-1 text-right">{formatCurrencyNoRound(Math.abs(invoice.freight))}</td>
                   </tr>
                 )}
-                {(invoice.freight != null && invoice.freight > 0) && (
-                  <tr className="border-b border-neutral-300">
-                    <td className="p-1 font-medium bg-neutral-50/50 text-xs">Taxable Amt</td>
-                    <td className="p-1 text-right">
-                      {formatCurrency(invoice.subtotal + invoice.freight)}
-                    </td>
-                  </tr>
-                )}
-                {invoice.withGst && invoice.totalGst != null && (
+                {invoice.withGst && (
                   <>
                     <tr className="border-b border-neutral-300">
                       <td className="p-1 font-medium bg-neutral-50/50">CGST (2.5%)</td>
                       <td className="p-1 text-right">
-                        {formatCurrency(invoice.totalGst / 2)}
+                        {formatCurrencyNoRound(cgst)}
                       </td>
                     </tr>
                     <tr className="border-b border-neutral-300">
                       <td className="p-1 font-medium bg-neutral-50/50">SGST (2.5%)</td>
                       <td className="p-1 text-right">
-                        {formatCurrency(invoice.totalGst / 2)}
+                        {formatCurrencyNoRound(sgst)}
                       </td>
                     </tr>
                   </>
@@ -391,4 +401,3 @@ export default async function InvoiceViewPage({
     </div>
   );
 }
-
