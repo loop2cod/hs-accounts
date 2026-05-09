@@ -172,7 +172,7 @@ function generatePrintHtml(
 
     allPagesHtml += `
 <div class="invoice-container"${pageBreakStyle}>
-<div class="invoice-content">
+<div class="invoice-content" ${page.items.length === 0 && page.padTo === 0 ? 'style="flex: none; margin-bottom: 20px;"' : ''}>
   <div style="margin-bottom:20px">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
       <div style="flex:1">
@@ -241,7 +241,7 @@ function generatePrintHtml(
   ` : ""}
   </div>
   ${page.hasFooter ? `
-  <div class="invoice-footer">
+  <div class="invoice-footer" ${page.items.length === 0 && page.padTo === 0 ? 'style="margin-top: 20px;"' : ''}>
     <div class="totals">
       <div class="totals-left">
         <strong>Grand Total in words:</strong><br>
