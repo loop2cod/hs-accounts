@@ -23,7 +23,7 @@ async function getBrowser() {
     cachedBrowser = await puppeteer.launch({
       args: chromium.args,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless === true ? true : "new",
+      headless: true,
     });
   }
   return cachedBrowser;
