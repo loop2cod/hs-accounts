@@ -93,10 +93,10 @@ function generatePrintHtml(
         startIndex: currentIndex
       });
       currentIndex += remaining;
-    } else if (remaining <= 25) {
+    } else if (remaining <= 30) {
       pages.push({
         items: invoice.lineItems.slice(currentIndex, currentIndex + remaining),
-        padTo: 25,
+        padTo: 30,
         hasFooter: false,
         pageIndex: pages.length,
         startIndex: currentIndex
@@ -104,18 +104,18 @@ function generatePrintHtml(
       currentIndex += remaining;
     } else {
       pages.push({
-        items: invoice.lineItems.slice(currentIndex, currentIndex + 25),
-        padTo: 25,
+        items: invoice.lineItems.slice(currentIndex, currentIndex + 30),
+        padTo: 30,
         hasFooter: false,
         pageIndex: pages.length,
         startIndex: currentIndex
       });
-      currentIndex += 25;
+      currentIndex += 30;
     }
   }
 
   if (pages.length > 0 && !pages[pages.length - 1].hasFooter) {
-    pages.push({ items: [], padTo: 20, hasFooter: true, pageIndex: pages.length, startIndex: currentIndex });
+    pages.push({ items: [], padTo: 0, hasFooter: true, pageIndex: pages.length, startIndex: currentIndex });
   }
 
   const logoHtml = logoBase64
@@ -218,6 +218,7 @@ function generatePrintHtml(
     </div>
   </div>
   
+  ${page.items.length > 0 || page.padTo > 0 ? `
   <div class="line-items-container">
     <table class="line-items-table">
       <thead>
@@ -237,6 +238,7 @@ function generatePrintHtml(
       </tbody>
     </table>
   </div>
+  ` : ""}
   </div>
   ${page.hasFooter ? `
   <div class="invoice-footer">
