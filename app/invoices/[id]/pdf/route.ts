@@ -5,6 +5,30 @@ import fs from "fs";
 import path from "path";
 import puppeteer from "puppeteer-core";
 
+let cachedBrowser: any = null;
+
+async function getBrowser() {
+  if (cachedBrowser) return cachedBrowser;
+  
+  const isDev = process.env.NODE_ENV === "development";
+  if (isDev) {
+    // Local development (Mac)
+    cachedBrowser = await puppeteer.launch({
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      headless: true,
+    });
+  } else {
+    const chromium = (await import("@sparticuz/chromium")).default;
+    cachedBrowser = await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless === true ? true : "new",
+    });
+  }
+  return cachedBrowser;
+}
+
 function formatDate(d: Date | string): string {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleDateString("en-IN", {
@@ -69,15 +93,24 @@ function generatePrintHtml(
         startIndex: currentIndex
       });
       currentIndex += remaining;
-    } else {
+    } else if (remaining <= 25) {
       pages.push({
-        items: invoice.lineItems.slice(currentIndex, currentIndex + 20),
-        padTo: 20,
+        items: invoice.lineItems.slice(currentIndex, currentIndex + remaining),
+        padTo: 25,
         hasFooter: false,
         pageIndex: pages.length,
         startIndex: currentIndex
       });
-      currentIndex += 20;
+      currentIndex += remaining;
+    } else {
+      pages.push({
+        items: invoice.lineItems.slice(currentIndex, currentIndex + 25),
+        padTo: 25,
+        hasFooter: false,
+        pageIndex: pages.length,
+        startIndex: currentIndex
+      });
+      currentIndex += 25;
     }
   }
 
@@ -311,28 +344,10 @@ export async function GET(
 
   // Generate PDF using Puppeteer
   try {
-    const isDev = process.env.NODE_ENV === "development";
-    let browser;
-
-    if (isDev) {
-      // Local development (Mac)
-      browser = await puppeteer.launch({
-        args: ["--no-sandbox", "--disable-setuid-sandbox"],
-        executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-        headless: true,
-      });
-    } else {
-      const chromium = (await import("@sparticuz/chromium")).default;
-      browser = await puppeteer.launch({
-        args: chromium.args,
-        defaultViewport: chromium.defaultViewport,
-        executablePath: await chromium.executablePath(),
-        headless: chromium.headless,
-      });
-    }
+    const browser = await getBrowser();
 
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: "networkidle0" });
+    await page.setContent(html, { waitUntil: "load" });
 
     const pdfBuffer = await page.pdf({
       format: "A4",
@@ -345,7 +360,7 @@ export async function GET(
       }
     });
 
-    await browser.close();
+    await page.close();
 
     const shopNameStr = (customer?.shopName || "Customer").replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
     const dateObj = typeof invoice.date === "string" ? new Date(invoice.date) : invoice.date;
