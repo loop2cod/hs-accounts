@@ -2,7 +2,11 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   turbopack: {},
-  serverExternalPackages: ['chrome-aws-lambda', 'puppeteer-core'],
+  outputFileTracingIncludes: {
+    '/invoices/[id]/pdf': [
+      './node_modules/@sparticuz/chromium/bin/**/*',
+    ],
+  },
 };
 
 export default nextConfig;

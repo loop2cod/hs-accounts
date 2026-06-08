@@ -16,12 +16,12 @@ async function getBrowser() {
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
   } else {
-    // Production (Vercel) - use chrome-aws-lambda
-    const chromium = (await import("chrome-aws-lambda")).default;
+    // Production (Vercel) - use @sparticuz/chromium
+    const chromium = (await import("@sparticuz/chromium")).default;
     return await puppeteer.launch({
       args: chromium.args,
-      executablePath: await chromium.executablePath,
-      headless: chromium.headless,
+      executablePath: await chromium.executablePath(),
+      headless: true,
     });
   }
 }
