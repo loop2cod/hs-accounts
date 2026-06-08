@@ -3,32 +3,23 @@ import { getInvoiceById } from "@/lib/actions/invoices";
 import { getCustomerById } from "@/lib/actions/customers";
 import fs from "fs";
 import path from "path";
-import puppeteer from "puppeteer-core";
-
-let cachedBrowser: any = null;
+import { chromium } from "playwright-core";
 
 async function getBrowser() {
-  if (cachedBrowser) return cachedBrowser;
-
   const isDev = process.env.NODE_ENV === "development";
+
   if (isDev) {
-    // Local development (Mac)
-    cachedBrowser = await puppeteer.launch({
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    // Local development
+    return await chromium.launch({
       executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
       headless: true,
     });
   } else {
-    // Production (serverless)
-    const chromium = (await import("@sparticuz/chromium")).default;
-
-    cachedBrowser = await puppeteer.launch({
-      args: chromium.args,
-      executablePath: await chromium.executablePath(),
+    // Production (Vercel) - use playwright's bundled chromium
+    return await chromium.launch({
       headless: true,
     });
   }
-  return cachedBrowser;
 }
 
 function formatDate(d: Date | string): string {
@@ -346,10 +337,10 @@ export async function GET(
     });
   }
 
-  // Generate PDF using Puppeteer
+  // Generate PDF using Playwright
+  let browser;
   try {
-    const browser = await getBrowser();
-
+    browser = await getBrowser();
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: "load" });
 
@@ -364,7 +355,7 @@ export async function GET(
       }
     });
 
-    await page.close();
+    await browser.close();
 
     const shopNameStr = (customer?.shopName || "Customer").replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
     const dateObj = typeof invoice.date === "string" ? new Date(invoice.date) : invoice.date;
@@ -375,13 +366,16 @@ export async function GET(
     }).replace(/\//g, "-");
     const fileName = `invoice-${invoice.invoiceNumber}-${dateStr}-${shopNameStr}.pdf`;
 
-    return new Response(pdfBuffer, {
+    return new Response(Buffer.from(pdfBuffer), {
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${fileName}"`,
       },
     });
   } catch (error) {
+    if (browser) {
+      await browser.close().catch(() => {});
+    }
     console.error("PDF generation error:", error);
     return new Response(`Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`, { status: 500 });
   }
