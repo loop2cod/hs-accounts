@@ -15,10 +15,9 @@ async function getBrowser() {
       headless: true,
     });
   } else {
-    // Production (Vercel) - use playwright's bundled chromium
-    return await chromium.launch({
-      headless: true,
-    });
+    // Production (Vercel) - use AWS Lambda chromium via playwright-aws-lambda
+    const playwright = await import('playwright-aws-lambda');
+    return await playwright.default.launchChromium();
   }
 }
 
