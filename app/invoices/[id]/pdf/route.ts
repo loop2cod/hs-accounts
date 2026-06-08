@@ -20,12 +20,13 @@ async function getBrowser() {
     });
   } else {
     // Production (serverless)
-    const chromium = (await import("@sparticuz/chromium-min")).default;
+    const chromium = (await import("@sparticuz/chromium")).default;
 
     cachedBrowser = await puppeteer.launch({
       args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: true,
+      headless: chromium.headless,
     });
   }
   return cachedBrowser;
