@@ -18,8 +18,18 @@ async function getBrowser() {
   } else {
     // Production (Vercel) - use @sparticuz/chromium
     const chromium = (await import("@sparticuz/chromium")).default;
+
+    // Set the path explicitly for Vercel Lambda environment
     return await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-first-run',
+        '--no-sandbox',
+        '--no-zygote',
+      ],
       executablePath: await chromium.executablePath(),
       headless: true,
     });

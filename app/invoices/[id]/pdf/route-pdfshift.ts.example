@@ -1,0 +1,59 @@
+// Alternative PDF route using PDFShift API
+// 1. Sign up at https://pdfshift.io (50 free PDFs/month)
+// 2. Add PDFSHIFT_API_KEY to your .env
+// 3. Rename this file to route.ts
+
+import { NextRequest } from "next/server";
+import { getInvoiceById } from "@/lib/actions/invoices";
+import { getCustomerById } from "@/lib/actions/customers";
+// ... other imports
+
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  // ... existing code to get invoice and generate HTML ...
+
+  if (isPrint) {
+    return new Response(html, {
+      headers: { "Content-Type": "text/html" },
+    });
+  }
+
+  // Generate PDF using PDFShift API
+  try {
+    const response = await fetch('https://api.pdfshift.io/v3/convert/pdf', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${Buffer.from(`api:${process.env.PDFSHIFT_API_KEY}`).toString('base64')}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        source: html,
+        landscape: false,
+        use_print: false,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`PDFShift API error: ${response.statusText}`);
+    }
+
+    const pdfBuffer = await response.arrayBuffer();
+
+    // ... existing filename generation code ...
+
+    return new Response(pdfBuffer, {
+      headers: {
+        "Content-Type": "application/pdf",
+        "Content-Disposition": `attachment; filename="${fileName}"`,
+      },
+    });
+  } catch (error) {
+    console.error("PDF generation error:", error);
+    return new Response(
+      `Failed to generate PDF: ${error instanceof Error ? error.message : "Unknown error"}`,
+      { status: 500 }
+    );
+  }
+}
