@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   },
   outputFileTracingIncludes: {
     '/invoices/[id]/pdf': [
-      'node_modules/@sparticuz/chromium/**',
+      'node_modules/@sparticuz/chromium/bin/*.br',
     ],
   },
   webpack: (config, { isServer }) => {

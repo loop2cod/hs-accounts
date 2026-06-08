@@ -21,16 +21,10 @@ async function getBrowser() {
   const chromium = (await import("@sparticuz/chromium")).default;
 
   return await puppeteer.launch({
-    args: [
-      ...chromium.args,
-      '--disable-gpu',
-      '--disable-dev-shm-usage',
-      '--disable-setuid-sandbox',
-      '--no-first-run',
-      '--no-sandbox',
-      '--no-zygote',
-    ],
-    executablePath: await chromium.executablePath(),
+    args: chromium.args,
+    executablePath: await chromium.executablePath(
+      path.join(process.cwd(), 'node_modules/@sparticuz/chromium/bin')
+    ),
     headless: true,
   });
 }
