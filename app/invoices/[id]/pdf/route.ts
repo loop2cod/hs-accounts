@@ -22,22 +22,10 @@ async function getBrowser() {
     // Production (serverless)
     const chromium = (await import("@sparticuz/chromium-min")).default;
 
-    // Configure chromium for serverless environment
-    chromium.setGraphicsMode = false;
-
     cachedBrowser = await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--disable-setuid-sandbox',
-        '--no-first-run',
-        '--no-zygote',
-        '--single-process',
-      ],
-      defaultViewport: chromium.defaultViewport,
+      args: chromium.args,
       executablePath: await chromium.executablePath(),
-      headless: chromium.headless,
+      headless: true,
     });
   }
   return cachedBrowser;
