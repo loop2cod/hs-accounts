@@ -3,21 +3,26 @@ import { getInvoiceById } from "@/lib/actions/invoices";
 import { getCustomerById } from "@/lib/actions/customers";
 import fs from "fs";
 import path from "path";
-import { chromium } from "playwright-core";
+import puppeteer from "puppeteer-core";
 
 async function getBrowser() {
   const isDev = process.env.NODE_ENV === "development";
 
   if (isDev) {
     // Local development
-    return await chromium.launch({
+    return await puppeteer.launch({
       executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
       headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
   } else {
-    // Production (Vercel) - use AWS Lambda chromium via playwright-aws-lambda
-    const playwright = await import('playwright-aws-lambda');
-    return await playwright.default.launchChromium();
+    // Production (Vercel) - use chrome-aws-lambda
+    const chromium = (await import("chrome-aws-lambda")).default;
+    return await puppeteer.launch({
+      args: chromium.args,
+      executablePath: await chromium.executablePath,
+      headless: chromium.headless,
+    });
   }
 }
 
@@ -344,7 +349,7 @@ export async function GET(
     await page.setContent(html, { waitUntil: "load" });
 
     const pdfBuffer = await page.pdf({
-      format: "A4",
+      format: "a4",
       printBackground: true,
       margin: {
         top: '0',
