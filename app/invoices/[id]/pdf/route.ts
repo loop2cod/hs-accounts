@@ -9,7 +9,7 @@ let cachedBrowser: any = null;
 
 async function getBrowser() {
   if (cachedBrowser) return cachedBrowser;
-  
+
   const isDev = process.env.NODE_ENV === "development";
   if (isDev) {
     // Local development (Mac)
@@ -19,11 +19,25 @@ async function getBrowser() {
       headless: true,
     });
   } else {
-    const chromium = (await import("@sparticuz/chromium")).default;
+    // Production (serverless)
+    const chromium = (await import("@sparticuz/chromium-min")).default;
+
+    // Configure chromium for serverless environment
+    chromium.setGraphicsMode = false;
+
     cachedBrowser = await puppeteer.launch({
-      args: chromium.args,
+      args: [
+        ...chromium.args,
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-setuid-sandbox',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process',
+      ],
+      defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
-      headless: true,
+      headless: chromium.headless,
     });
   }
   return cachedBrowser;
