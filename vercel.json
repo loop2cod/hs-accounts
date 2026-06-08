@@ -1,8 +1,8 @@
 {
   "functions": {
     ".next/server/app/invoices/[id]/pdf/route.js": {
-      "memory": 3008,
-      "maxDuration": 60
+      "memory": 1024,
+      "maxDuration": 10
     }
   }
 }
