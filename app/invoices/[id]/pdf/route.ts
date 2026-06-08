@@ -274,7 +274,7 @@ function generatePrintHtml(
   <title>Invoice ${invoice.invoiceNumber}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial,sans-serif; font-size: 13px; padding: 0; }
+    body { font-family: Arial,sans-serif; font-size: 12px; padding: 0; }
     .invoice-container { display: flex; flex-direction: column; min-height: 99vh; border: 2px solid #000; padding: 15px; }
     .invoice-content { flex: 1; display: flex; flex-direction: column; }
     .line-items-container { flex: 1; display: flex; flex-direction: column; }
