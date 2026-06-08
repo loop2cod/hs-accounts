@@ -6,34 +6,33 @@ import path from "path";
 import puppeteer from "puppeteer-core";
 
 async function getBrowser() {
-  const isDev = process.env.NODE_ENV === "development";
+  const chromePath = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome";
+  const hasLocalChrome = fs.existsSync(chromePath);
 
-  if (isDev) {
-    // Local development
+  if (hasLocalChrome) {
     return await puppeteer.launch({
-      executablePath: "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+      executablePath: chromePath,
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
-  } else {
-    // Production (Vercel) - use @sparticuz/chromium
-    const chromium = (await import("@sparticuz/chromium")).default;
-
-    // Set the path explicitly for Vercel Lambda environment
-    return await puppeteer.launch({
-      args: [
-        ...chromium.args,
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--disable-setuid-sandbox',
-        '--no-first-run',
-        '--no-sandbox',
-        '--no-zygote',
-      ],
-      executablePath: await chromium.executablePath(),
-      headless: true,
-    });
   }
+
+  // Production (Vercel) - use @sparticuz/chromium
+  const chromium = (await import("@sparticuz/chromium")).default;
+
+  return await puppeteer.launch({
+    args: [
+      ...chromium.args,
+      '--disable-gpu',
+      '--disable-dev-shm-usage',
+      '--disable-setuid-sandbox',
+      '--no-first-run',
+      '--no-sandbox',
+      '--no-zygote',
+    ],
+    executablePath: await chromium.executablePath(),
+    headless: true,
+  });
 }
 
 function formatDate(d: Date | string): string {
