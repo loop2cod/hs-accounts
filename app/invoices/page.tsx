@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { Pagination } from "@/components/ui/Pagination";
-import { FileText, Plus, Download, ChevronRight, Calendar, BadgeCheck, Package } from "lucide-react";
+import { FileText, Plus, Download, ChevronRight, Calendar, BadgeCheck, Package, Store } from "lucide-react";
 import { InvoiceSearchBar } from "@/components/invoices/InvoiceSearchBar";
 
 export default async function InvoicesPage({
@@ -111,6 +111,12 @@ export default async function InvoicesPage({
                         <p className="font-semibold text-slate-900 font-mono tracking-tight">
                           {inv.invoiceNumber}
                         </p>
+                        {(inv.shopName || inv.customerName) ? (
+                          <p className="text-sm font-medium text-slate-700 line-clamp-1 flex items-center gap-1.5">
+                            <Store className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            {inv.shopName || inv.customerName}
+                          </p>
+                        ) : null}
                         <div className="flex items-center gap-3 text-xs text-slate-500">
                           <span className="flex items-center gap-1 font-medium">
                             <Calendar className="w-3 h-3" />

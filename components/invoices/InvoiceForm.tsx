@@ -1,9 +1,9 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import type { LineItem, Invoice } from "@/lib/types";
 
 interface InvoiceFormProps {
@@ -30,8 +30,62 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
     invoice && invoice.lineItems.length > 0 ? invoice.lineItems : [{ ...defaultLineItem }]
   );
   const [error, setError] = useState<string | null>(null);
-  const [isCustomerEditOpen, setIsCustomerEditOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // --- Customer Command Combobox state ---
+  const [selectedCustomerId, setSelectedCustomerId] = useState(defaultCustId);
+  const [customerOpen, setCustomerOpen] = useState(false);
+  const [customerQuery, setCustomerQuery] = useState("");
+  const customerComboboxRef = useRef<HTMLDivElement>(null);
+  const customerInputRef = useRef<HTMLInputElement>(null);
+
+  // keep selected in sync if prop changes (e.g. navigation with ?customerId=)
+  useEffect(() => {
+    setSelectedCustomerId(defaultCustId);
+  }, [defaultCustId]);
+
+  // focus search input when popover opens
+  useEffect(() => {
+    if (customerOpen) {
+      setTimeout(() => customerInputRef.current?.focus(), 0);
+    } else {
+      setCustomerQuery("");
+    }
+  }, [customerOpen]);
+
+  // close on outside click
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (
+        customerComboboxRef.current &&
+        !customerComboboxRef.current.contains(e.target as Node)
+      ) {
+        setCustomerOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setCustomerOpen(false);
+    }
+    if (customerOpen) {
+      document.addEventListener("mousedown", onClickOutside);
+      document.addEventListener("keydown", onKey);
+      return () => {
+        document.removeEventListener("mousedown", onClickOutside);
+        document.removeEventListener("keydown", onKey);
+      };
+    }
+  }, [customerOpen]);
+
+  const selectedCustomer = customers.find((c) => c._id === selectedCustomerId) || null;
+
+  const filteredCustomers = customers.filter((c) => {
+    if (!customerQuery.trim()) return true;
+    const q = customerQuery.toLowerCase();
+    return (
+      c.shopName.toLowerCase().includes(q) ||
+      (c.address && c.address.toLowerCase().includes(q))
+    );
+  });
 
   // Find initial shipping address if customer is pre-selected for a new invoice
   const getInitialAddress = () => {
@@ -109,13 +163,19 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (isSubmitting) return;
+    if (!selectedCustomerId) {
+      setError("Please select a customer.");
+      return;
+    }
     setIsSubmitting(true);
     setError(null);
     const form = e.currentTarget;
     const fd = new FormData(form);
+    // ensure customerId from controlled state is submitted (hidden input already does, but be explicit)
+    fd.set("customerId", selectedCustomerId);
     // Filter out completely empty rows
     const validLineItems = lineItems.filter(item => (item.description && item.description.trim() !== "") || item.quantity > 0 || item.unitPrice > 0);
-    if (validLineItems.length === 0) { setError("Please add at least one valid line item."); return; }
+    if (validLineItems.length === 0) { setError("Please add at least one valid line item."); setIsSubmitting(false); return; }
     fd.set("lineItems", JSON.stringify(validLineItems));
     fd.set("withGst", withGst ? "true" : "false");
     const result = await action(fd);
@@ -153,25 +213,98 @@ export function InvoiceForm({ invoice, customerId, customers, action }: InvoiceF
           </div>
 
           <div className="space-y-4">
-            <Select
-              name="customerId"
-              required
-              disabled={!!invoice}
-              defaultValue={defaultCustId || undefined}
-              className="bg-slate-50/50 border-slate-200/50 focus:bg-white"
-              onChange={(e) => {
-                const selectedId = e.target.value;
-                const cust = customers.find(c => c._id === selectedId);
-                setShippingAddress(cust?.address || "");
-              }}
-            >
-              <option value="">Select a customer</option>
-              {customers.map((c) => (
-                <option key={c._id} value={c._id}>
-                  {c.shopName}
-                </option>
-              ))}
-            </Select>
+            {/* Customer Command Combobox */}
+            <div ref={customerComboboxRef} className="relative">
+              {/* hidden input for form submission */}
+              <input type="hidden" name="customerId" value={selectedCustomerId} />
+              <button
+                type="button"
+                role="combobox"
+                aria-expanded={customerOpen}
+                aria-controls="customer-command-list"
+                disabled={!!invoice}
+                onClick={() => {
+                  if (!invoice) setCustomerOpen((o) => !o);
+                }}
+                className={`flex w-full items-center justify-between rounded-xl border bg-slate-50/50 px-4 py-2.5 text-sm transition-all focus:border-primary focus:bg-white focus:outline-none focus:ring-4 focus:ring-primary/10 ${customerOpen ? "border-primary bg-white ring-4 ring-primary/10" : "border-slate-200/50"} ${invoice ? "opacity-60 cursor-not-allowed" : "cursor-pointer hover:bg-white"} ${!selectedCustomer ? "text-slate-400" : "text-slate-900"}`}
+              >
+                <span className="truncate text-left">
+                  {selectedCustomer ? selectedCustomer.shopName : "Select a customer"}
+                </span>
+                <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+              </button>
+
+              {customerOpen && !invoice && (
+                <div className="absolute z-50 mt-2 w-full rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50 overflow-hidden animate-in fade-in slide-in-from-top-1">
+                  {/* Command Input */}
+                  <div className="flex items-center border-b border-slate-100 px-3">
+                    <Search className="mr-2 h-4 w-4 shrink-0 opacity-40" />
+                    <input
+                      ref={customerInputRef}
+                      placeholder="Search customer..."
+                      value={customerQuery}
+                      onChange={(e) => setCustomerQuery(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Escape") {
+                          e.preventDefault();
+                          setCustomerOpen(false);
+                        }
+                      }}
+                      className="flex h-10 w-full bg-transparent py-3 text-sm outline-none placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  {/* Command List */}
+                  <div
+                    id="customer-command-list"
+                    role="listbox"
+                    className="max-h-60 overflow-auto p-1"
+                  >
+                    {filteredCustomers.length === 0 ? (
+                      <div className="py-6 text-center text-sm text-slate-500">
+                        No customer found.
+                      </div>
+                    ) : (
+                      filteredCustomers.map((c) => {
+                        const isSelected = c._id === selectedCustomerId;
+                        return (
+                          <button
+                            key={c._id}
+                            type="button"
+                            role="option"
+                            aria-selected={isSelected}
+                            onClick={() => {
+                              setSelectedCustomerId(c._id);
+                              setShippingAddress(c.address || "");
+                              setCustomerOpen(false);
+                            }}
+                            className={`flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm transition-colors text-left ${isSelected ? "bg-primary text-white" : "hover:bg-slate-50 text-slate-700"}`}
+                          >
+                            <Check className={`h-4 w-4 shrink-0 ${isSelected ? "opacity-100" : "opacity-0"}`} />
+                            <div className="flex flex-col overflow-hidden">
+                              <span className={`truncate font-medium ${isSelected ? "text-white" : "text-slate-900"}`}>
+                                {c.shopName}
+                              </span>
+                              {c.address && (
+                                <span className={`truncate text-xs ${isSelected ? "text-white/80" : "text-slate-500"}`}>
+                                  {c.address}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {customers.length > 5 && (
+                    <div className="border-t border-slate-100 bg-slate-50/50 px-3 py-2 text-[10px] font-medium text-slate-400">
+                      {filteredCustomers.length} of {customers.length} customers
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             <div className="space-y-1.5">
               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest ml-1">Shipping Address</label>

@@ -108,6 +108,7 @@ export async function getInvoices(filters?: {
           data: [
             { $skip: filters?.limit === 0 ? 0 : skip },
             ...(filters?.limit === 0 ? [] : [{ $limit: limit }]),
+            { $addFields: { shopName: "$customer.shopName" } },
             {
               $project: {
                 lineItems: 0,
@@ -159,11 +160,36 @@ export async function getInvoices(filters?: {
 
   const list = (await cursor.toArray()) as Invoice[];
 
+  // Enrich with shopName via batch customer lookup (needed for listing)
+  let shopNameMap = new Map<string, string>();
+  if (list.length > 0) {
+    const customerIds = [...new Set(list.map((inv) => inv.customerId.toString()))];
+    const { ObjectId: OID } = await import("mongodb");
+    const cOids: any[] = [];
+    for (const id of customerIds) {
+      try {
+        cOids.push(new OID(id));
+      } catch {}
+    }
+    if (cOids.length > 0) {
+      const customers = await db
+        .collection("customers")
+        .find({ _id: { $in: cOids } })
+        .project({ shopName: 1 })
+        .toArray();
+      for (const c of customers) {
+        shopNameMap.set((c._id as any).toString(), (c as any).shopName);
+      }
+    }
+  }
+
   return {
-    invoices: list.map((inv) => ({
+    invoices: list.map((inv: any) => ({
       ...inv,
       _id: inv._id!.toString(),
       customerId: inv.customerId.toString(),
+      shopName: shopNameMap.get(inv.customerId.toString()) ?? null,
+      customerName: shopNameMap.get(inv.customerId.toString()) ?? null,
     })),
     total,
     page,
