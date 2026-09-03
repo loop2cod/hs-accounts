@@ -293,7 +293,7 @@ function generatePrintHtml(
     .footer { border: 1px solid #ccc; padding: 8px; }
     @media print {
       body { padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      @page { margin: 0.5cm; size: auto; }
+      @page { margin: 0.5cm; size: A4; }
       .invoice-container { display: flex; flex-direction: column; min-height: 99.5vh; border: 2px solid #000; padding: 15px; }
       .invoice-content { flex: 1; display: flex; flex-direction: column; }
       .line-items-container { flex: 1; display: flex; flex-direction: column; }
@@ -355,10 +355,10 @@ export async function GET(
       format: "a4",
       printBackground: true,
       margin: {
-        top: '0',
-        right: '0',
-        bottom: '0',
-        left: '0'
+        top: '0.5cm',
+        right: '0.5cm',
+        bottom: '0.5cm',
+        left: '0.5cm'
       }
     });
 
