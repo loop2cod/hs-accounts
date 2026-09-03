@@ -168,7 +168,7 @@ function generatePrintHtml(
       totalsHtml += `<tr><td colspan="5" style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">Grand Total:</td><td style="border:1px solid #ccc;padding:4px;text-align:right;font-weight:bold">${formatNum(grandTotal)}</td></tr>`;
     }
 
-    const pageBreakStyle = p < pages.length - 1 ? ' style="page-break-after: always;"' : '';
+    const pageBreakStyle = p < pages.length - 1 ? ' style="page-break-after: always; break-after: page;"' : '';
 
     allPagesHtml += `
 <div class="invoice-container"${pageBreakStyle}>
@@ -271,12 +271,12 @@ function generatePrintHtml(
 <html>
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=800, initial-scale=1">
   <title>Invoice ${invoice.invoiceNumber}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
-    body { font-family: Arial,sans-serif; font-size: 12px; padding: 0; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { font-family: Arial,sans-serif; font-size: 12px; padding: 0; width: 800px; max-width: 100%; margin: 0 auto; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     .invoice-container { display: flex; flex-direction: column; min-height: 99.5vh; min-height: 100dvh; border: 2px solid #000; padding: 15px; }
     .invoice-content { flex: 1; display: flex; flex-direction: column; }
     .line-items-container { flex: 1; display: flex; flex-direction: column; }
@@ -294,13 +294,13 @@ function generatePrintHtml(
     .totals-right td { border: 1px solid #ccc; padding: 4px; }
     .footer { border: 1px solid #ccc; padding: 8px; break-inside: avoid; page-break-inside: avoid; }
     @media print {
-      html, body { height: auto; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body { width: 210mm; height: auto; margin: 0 auto; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       @page { margin: 0.5cm; size: A4; }
-      .invoice-container { display: flex; flex-direction: column; min-height: 272mm; height: auto; border: 2px solid #000; padding: 15px; }
-      .invoice-content { flex: 1; display: flex; flex-direction: column; }
-      .line-items-container { flex: 1; display: flex; flex-direction: column; }
+      .invoice-container { display: flex; flex-direction: column; min-height: auto; height: auto; border: 2px solid #000; padding: 15px; }
+      .invoice-content { flex: none; display: flex; flex-direction: column; }
+      .line-items-container { flex: none; display: flex; flex-direction: column; }
       .line-items-table { border: 1px solid #000; }
-      .invoice-footer { margin-top: auto; page-break-inside: avoid; break-inside: avoid; }
+      .invoice-footer { margin-top: 24px; page-break-inside: avoid; break-inside: avoid; }
     }
   </style>
 </head>
