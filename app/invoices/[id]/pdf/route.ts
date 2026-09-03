@@ -271,18 +271,20 @@ function generatePrintHtml(
 <html>
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Invoice ${invoice.invoiceNumber}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: Arial,sans-serif; font-size: 12px; padding: 0; }
-    .invoice-container { display: flex; flex-direction: column; min-height: 99.5vh; border: 2px solid #000; padding: 15px; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body { font-family: Arial,sans-serif; font-size: 12px; padding: 0; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    .invoice-container { display: flex; flex-direction: column; min-height: 99.5vh; min-height: 100dvh; border: 2px solid #000; padding: 15px; }
     .invoice-content { flex: 1; display: flex; flex-direction: column; }
     .line-items-container { flex: 1; display: flex; flex-direction: column; }
-    .line-items-table { width: 100%; border-collapse: collapse; border: 1px solid #000; }
+    .line-items-table { width: 100%; border-collapse: collapse; border: 1px solid #000; table-layout: fixed; }
     .line-items-table th { background: #f0f0f0; padding: 4px; text-align: left; font-weight: bold; font-size: 12px; border-left: 1px solid #000; border-right: 1px solid #000; border-bottom: 1px solid #000; }
-    .line-items-table td { padding: 4px; border-left: 1px solid #000; border-right: 1px solid #000; }
+    .line-items-table td { padding: 4px; border-left: 1px solid #000; border-right: 1px solid #000; word-wrap: break-word; overflow-wrap: break-word; }
     .line-items-table tbody { vertical-align: top; }
-    .invoice-footer { margin-top: auto; page-break-inside: avoid; }
+    .invoice-footer { margin-top: auto; page-break-inside: avoid; break-inside: avoid; }
     .addresses { display: flex; justify-content: space-between; margin-bottom: 20px; }
     .address { width: 48%; border: 1px solid #ccc; padding: 8px; }
     .totals { display: flex; justify-content: space-between; margin-bottom: 20px; }
@@ -290,15 +292,15 @@ function generatePrintHtml(
     .totals-right { width: 28%; }
     .totals-right table { width: 100%; border-collapse: collapse; }
     .totals-right td { border: 1px solid #ccc; padding: 4px; }
-    .footer { border: 1px solid #ccc; padding: 8px; }
+    .footer { border: 1px solid #ccc; padding: 8px; break-inside: avoid; page-break-inside: avoid; }
     @media print {
-      body { padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      html, body { height: auto; padding: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
       @page { margin: 0.5cm; size: A4; }
-      .invoice-container { display: flex; flex-direction: column; min-height: 99.5vh; border: 2px solid #000; padding: 15px; }
+      .invoice-container { display: flex; flex-direction: column; min-height: 272mm; height: auto; border: 2px solid #000; padding: 15px; }
       .invoice-content { flex: 1; display: flex; flex-direction: column; }
       .line-items-container { flex: 1; display: flex; flex-direction: column; }
       .line-items-table { border: 1px solid #000; }
-      .invoice-footer { margin-top: auto; page-break-inside: avoid; }
+      .invoice-footer { margin-top: auto; page-break-inside: avoid; break-inside: avoid; }
     }
   </style>
 </head>

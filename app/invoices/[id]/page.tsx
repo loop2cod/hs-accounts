@@ -246,7 +246,7 @@ export default async function InvoiceViewPage({
 
       {/* Invoice Document - PRINT ONLY TEMPLATE */}
       <div className="invoice-doc invoice-print-template mx-auto max-w-none px-0 py-0 bg-white hidden print:block">
-        <div className="invoice-print-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', border: '2px solid #000', padding: '15px' }}>
+        <div className="invoice-print-wrapper" style={{ display: 'flex', flexDirection: 'column', minHeight: '272mm', border: '2px solid #000', padding: '15px' }}>
           <div className="invoice-print-content" style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
             <div className="inv-header mb-4">
               <div className="flex justify-between items-start mb-3">
